@@ -1,48 +1,43 @@
-// Original Tenglish (Telugu + English) one-liners written for G Theta.
-// Not quotes from any film, show, or existing meme template.
+// Original Tenglish microcopy for the storefront. These are not film quotes.
 
 export const addLines = [
   "Bag lo padindi bidda! 🛍️",
   "Adding chesko, tension enti mama?",
-  "Cart ki oka kotha member vachadu 🎉",
-  "Idi tీసుకున్నావా, semma choice!",
-  "Order pettesav ante, respect undi నీకు 🔥",
-  "ఒక్కటి ఏంటి, రెండు తీసుకో బాబు!",
-  "Full swag mode ON ✅",
-  "Nee style ki full మార్కులు 💯",
+  "Cart ki kottha member vachadu 🎉",
+  "Semma choice. Crowd approved 🔥",
+  "Nee style ki full marks 💯",
+  "Interval block item locked!",
 ]
 
 export const removeLines = [
-  "Tీసేసావా? Sare, నీ ఇష్టం 😮‍💨",
-  "Pోయింది pోనీలే, next di chudu",
-  "Bag ఖాళీ ఐపోతోంది మరి...",
-  "Cart nunchi exit తీసుకున్నాడు 🚪",
-  "Sరే మామా, మనసు మారితే మల్లీ add cheyyi",
-  "Deleted... pakka clean ah! 🧹",
-  "Ee item కి బై చెప్పేసావ్",
+  "Teesesava? Sare, nee ishtam 😮‍💨",
+  "Poyindi poneele. Next design choodu.",
+  "Bag khaali aipothondi mari…",
+  "Cart nunchi exit teesukunnadu 🚪",
+  "Mind maarithe malli add cheyyi.",
 ]
 
 export const emptyCartLines = [
-  "Bag ఖాళీగా ఉంది... enti idi, festival mood ledha? 🛒",
-  "Idi chala empty ga undi bro, konchem shopping cheddama?",
-  "Cart lo em ledu... first order mొదలుపెట్టు!",
+  "Bag khaali ga undi… first-show mood ledha?",
+  "Idi chaala empty ga undi bro. Shopping cheddama?",
+  "Cart lo em ledu. Drop 01 choodu!",
 ]
 
 export const checkoutLines = [
   "Order confirm ayyindi ra bidda! 🚀",
-  "Shipping start ayyaka full hero entry chేస్తుంది 😎",
-  "Nee package పంపిస్తున్నాం, ready ga undu!",
+  "Shipping start ayyaka full hero entry chesthundi 😎",
+  "Package pampisthunnam. Whistle ready ga unchuko!",
 ]
 
 export const wishlistLines = [
-  "Wishlist lo pettesav, manam marchipోము 💛",
-  "Idi save chేసుకున్నావ్, tarwata teesుకో మరి!",
+  "Wishlist lo pettesav. Manam marchipomu 💛",
+  "Save ayyindi. Tarvatha teesuko mari!",
 ]
 
 export const subscribeLines = [
-  "Subscribe ayyav bidda! Inbox lo kalustham 💌",
-  "Done! Next drop news direct ga nee mail ki 🚀",
-  "Welcome to the family ra! Full updates vastayi 🔔",
+  "List lo padipoyav! First-show update direct ga vastundi 🎟️",
+  "Done! Next drop news nee inbox ke.",
+  "Fan club entry confirmed 🔔",
 ]
 
 export function randomOf(list: string[]): string {

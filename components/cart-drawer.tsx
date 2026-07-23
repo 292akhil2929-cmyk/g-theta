@@ -135,7 +135,7 @@ export function CartDrawer() {
               <button
                 onClick={checkout}
                 disabled={lines.length === 0}
-                className="w-full rounded-full bg-gradient-to-r from-electric to-neon py-3.5 text-center font-semibold text-white transition hover:shadow-[0_0_40px_rgba(79,124,255,0.45)] disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full rounded-full bg-gradient-to-r from-electric to-neon py-3.5 text-center font-semibold text-black transition hover:shadow-[0_0_40px_rgba(245,203,69,0.35)] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Checkout
               </button>

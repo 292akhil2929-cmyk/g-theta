@@ -11,18 +11,75 @@ export type Product = {
 
 export const SIZES = ["XS", "S", "M", "L", "XL", "XXL"]
 
-const specs = { weight: "480 GSM", fabric: "Brushed loopback cotton", fit: "Relaxed / drop shoulder" }
+const specs = {
+  weight: "480 GSM",
+  fabric: "Brushed loopback cotton",
+  fit: "Oversized / drop shoulder",
+}
 
 export const products: Product[] = [
-  { id: "gt-shadow",   name: "Shadow",   code: "GΘ-001", price: 4999, colorFrom: "#1b1b20", colorTo: "#08080a", sizes: SIZES, specs },
-  { id: "gt-ghost",    name: "Ghost",    code: "GΘ-002", price: 4999, colorFrom: "#f2f2f4", colorTo: "#b9bac2", sizes: SIZES, specs },
-  { id: "gt-graphite", name: "Graphite", code: "GΘ-003", price: 4999, colorFrom: "#5a5b64", colorTo: "#2b2c33", sizes: SIZES, specs },
-  { id: "gt-cobalt",   name: "Cobalt",   code: "GΘ-004", price: 5499, colorFrom: "#3f6bff", colorTo: "#16267a", sizes: SIZES, specs },
-  { id: "gt-sand",     name: "Sand",     code: "GΘ-005", price: 5499, colorFrom: "#d8c9ae", colorTo: "#8f8264", sizes: SIZES, specs },
-  { id: "gt-olive",    name: "Olive",    code: "GΘ-006", price: 5499, colorFrom: "#6b7451", colorTo: "#33381f", sizes: SIZES, specs },
+  {
+    id: "gt-baavundi",
+    name: "Baavundi Hoodie",
+    code: "GΘ-001",
+    price: 3499,
+    colorFrom: "#20252b",
+    colorTo: "#070809",
+    sizes: SIZES,
+    specs,
+  },
+  {
+    id: "gt-manakenduku",
+    name: "Manakenduku Hoodie",
+    code: "GΘ-002",
+    price: 3299,
+    colorFrom: "#dd4134",
+    colorTo: "#77150f",
+    sizes: SIZES,
+    specs,
+  },
+  {
+    id: "gt-anthega",
+    name: "Anthe Ga Hoodie",
+    code: "GΘ-003",
+    price: 3299,
+    colorFrom: "#eee4d3",
+    colorTo: "#9c8c73",
+    sizes: SIZES,
+    specs,
+  },
+  {
+    id: "gt-ayyayyo",
+    name: "Ayyayyo Hoodie",
+    code: "GΘ-004",
+    price: 3299,
+    colorFrom: "#f5cb45",
+    colorTo: "#b77a0b",
+    sizes: SIZES,
+    specs,
+  },
+  {
+    id: "gt-sideeye",
+    name: "Side Eye Hoodie",
+    code: "GΘ-005",
+    price: 3499,
+    colorFrom: "#747d45",
+    colorTo: "#30351c",
+    sizes: SIZES,
+    specs,
+  },
+  {
+    id: "gt-interval",
+    name: "Interval Block Hoodie",
+    code: "GΘ-006",
+    price: 3699,
+    colorFrom: "#7a1e20",
+    colorTo: "#260809",
+    sizes: SIZES,
+    specs,
+  },
 ]
 
-// Configurator colorways for the 3D viewer
 export type Colorway = {
   name: string
   hex: string
@@ -32,18 +89,16 @@ export type Colorway = {
 
 export const COLORWAYS: Colorway[] = [
   { name: "Black", hex: "#17171b", colorFrom: "#1b1b20", colorTo: "#08080a" },
-  { name: "White", hex: "#e8e8ea", colorFrom: "#f2f2f4", colorTo: "#b9bac2" },
-  { name: "Gray",  hex: "#7a7a82", colorFrom: "#5a5b64", colorTo: "#2b2c33" },
-  { name: "Blue",  hex: "#2f5bff", colorFrom: "#3f6bff", colorTo: "#16267a" },
-  { name: "Beige", hex: "#cfc0a8", colorFrom: "#d8c9ae", colorTo: "#8f8264" },
-  { name: "Olive", hex: "#5d6647", colorFrom: "#6b7451", colorTo: "#33381f" },
-  { name: "Red",   hex: "#b3242c", colorFrom: "#d03038", colorTo: "#5c1216" },
+  { name: "Cream", hex: "#e8ded0", colorFrom: "#eee4d3", colorTo: "#9c8c73" },
+  { name: "Red", hex: "#d83a2e", colorFrom: "#dd4134", colorTo: "#77150f" },
+  { name: "Yellow", hex: "#f5cb45", colorFrom: "#f5cb45", colorTo: "#b77a0b" },
+  { name: "Olive", hex: "#68713f", colorFrom: "#747d45", colorTo: "#30351c" },
 ]
 
-export function colorwayToProduct(c: Colorway, price = 5999): Product {
+export function colorwayToProduct(c: Colorway, price = 3499): Product {
   return {
     id: `gt-hoodie-${c.name.toLowerCase()}`,
-    name: `Theta One — ${c.name}`,
+    name: `G Theta Hoodie — ${c.name}`,
     code: "GΘ-X",
     price,
     colorFrom: c.colorFrom,

@@ -6,7 +6,7 @@ import { Logo } from "@/components/logo"
 import { useCart } from "@/components/cart-context"
 import { checkoutLines, randomOf } from "@/lib/memes"
 
-const confettiColors = ["#4f7cff", "#a855f7", "#d7d9e0", "#ffffff"]
+const confettiColors = ["#d83a2e", "#f5cb45", "#f1e8d6", "#ffffff"]
 
 function ConfettiBurst() {
   const pieces = useMemo(
@@ -60,7 +60,7 @@ export function CheckoutOverlay() {
         >
           <ConfettiBurst />
           <motion.div
-            className="glass relative flex max-w-md flex-col items-center gap-5 rounded-3xl border-electric/25 p-10 text-center shadow-[0_0_80px_rgba(79,124,255,0.2)]"
+            className="glass relative flex max-w-md flex-col items-center gap-5 rounded-3xl border-electric/25 p-10 text-center shadow-[0_0_80px_rgba(216,58,46,0.2)]"
             initial={{ scale: 0.7, y: 40, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.85, y: 20, opacity: 0 }}
@@ -82,7 +82,7 @@ export function CheckoutOverlay() {
             </p>
             <button
               onClick={dismissOrder}
-              className="mt-2 rounded-full bg-gradient-to-r from-electric to-neon px-7 py-3 font-semibold text-white transition hover:shadow-[0_0_36px_rgba(79,124,255,0.5)]"
+              className="mt-2 rounded-full bg-gradient-to-r from-electric to-neon px-7 py-3 font-semibold text-black transition hover:shadow-[0_0_36px_rgba(245,203,69,0.4)]"
             >
               Continue shopping
             </button>
