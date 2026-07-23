@@ -92,7 +92,10 @@ const marquee = [
   "FULL THEATRE ENERGY",
 ]
 
-function emitSound(name: "laugh" | "sting" | "cheer" | "whoosh") {
+const ADARAKU_PREVIEW =
+  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/fb/6f/ef/fb6fef73-d955-fd05-6f77-5e22bfbf5378/mzaf_11368965629338069892.plus.aac.p.m4a"
+
+function emitSound(name: "laugh" | "sting" | "cheer" | "whoosh" | "entry") {
   window.dispatchEvent(new CustomEvent("gtheta-sound", { detail: name }))
 }
 
@@ -193,6 +196,7 @@ function SoundController() {
   const [enabled, setEnabled] = useState(false)
   const contextRef = useRef<AudioContext | null>(null)
   const humRef = useRef<OscillatorNode | null>(null)
+  const entryAudioRef = useRef<HTMLAudioElement | null>(null)
   const enabledRef = useRef(false)
 
   useEffect(() => {
@@ -201,9 +205,17 @@ function SoundController() {
 
   useEffect(() => {
     const play = (event: Event) => {
-      if (!enabledRef.current || !contextRef.current) return
-      const context = contextRef.current
       const name = (event as CustomEvent<string>).detail
+      if (!enabledRef.current) return
+      if (name === "entry") {
+        const audio = entryAudioRef.current
+        if (!audio) return
+        audio.currentTime = 0
+        void audio.play().catch(() => {})
+        return
+      }
+      if (!contextRef.current) return
+      const context = contextRef.current
       const now = context.currentTime
 
       if (name === "laugh") {
@@ -263,6 +275,8 @@ function SoundController() {
 
   const toggle = () => {
     if (enabled) {
+      entryAudioRef.current?.pause()
+      if (entryAudioRef.current) entryAudioRef.current.currentTime = 0
       humRef.current?.stop()
       humRef.current = null
       void contextRef.current?.close()
@@ -291,22 +305,34 @@ function SoundController() {
       humRef.current = hum
       enabledRef.current = true
       setEnabled(true)
-      window.setTimeout(() => {
-        window.dispatchEvent(new Event("gtheta-replay-entry"))
-      }, 60)
+      const entryAudio = entryAudioRef.current
+      if (entryAudio) {
+        entryAudio.currentTime = 0
+        void entryAudio.play().catch(() => {})
+      }
+      window.dispatchEvent(new Event("gtheta-replay-entry"))
     } catch {}
   }
 
   return (
-    <button
-      data-testid="sound-toggle"
-      onClick={toggle}
-      aria-pressed={enabled}
-      className="fixed bottom-3 right-3 z-[90] flex items-center gap-2 rounded-full border-2 border-black bg-[#f5cb45] px-3 py-2.5 text-[9px] font-black uppercase tracking-[0.12em] text-black shadow-[4px_4px_0_#d83a2e] transition hover:-translate-y-1 sm:bottom-4 sm:right-4 sm:px-4 sm:py-3 sm:text-[10px] sm:tracking-[0.15em]"
-    >
-      {enabled ? <Volume2 size={16} fill="currentColor" /> : <VolumeX size={16} />}
-      Sound {enabled ? "on" : "off"}
-    </button>
+    <>
+      <audio
+        ref={entryAudioRef}
+        data-testid="entry-audio"
+        src={ADARAKU_PREVIEW}
+        preload="auto"
+        crossOrigin="anonymous"
+      />
+      <button
+        data-testid="sound-toggle"
+        onClick={toggle}
+        aria-pressed={enabled}
+        className="fixed bottom-3 right-3 z-[90] flex items-center gap-2 rounded-full border-2 border-black bg-[#f5cb45] px-3 py-2.5 text-[9px] font-black uppercase tracking-[0.12em] text-black shadow-[4px_4px_0_#d83a2e] transition hover:-translate-y-1 sm:bottom-4 sm:right-4 sm:px-4 sm:py-3 sm:text-[10px] sm:tracking-[0.15em]"
+      >
+        {enabled ? <Volume2 size={16} fill="currentColor" /> : <VolumeX size={16} />}
+        {enabled ? "Adaraku on" : "Start entry audio"}
+      </button>
+    </>
   )
 }
 
@@ -500,6 +526,7 @@ function Hero() {
 
   const replay = () => {
     setScene((value) => value + 1)
+    emitSound("entry")
   }
 
   return (
@@ -643,7 +670,7 @@ function Hero() {
               Crowd rating: papers never stop flying
             </p>
             <p className="mt-2 text-[9px] font-black uppercase tracking-[0.18em] text-[#f5cb45]">
-              Doors and crowd run automatically
+              Adaraku 30-second preview via Apple Music
             </p>
           </div>
         </motion.div>
@@ -921,7 +948,6 @@ function AlluLaughSection() {
     target: sectionRef,
     offset: ["start end", "end start"],
   })
-  const wordX = useTransform(scrollYProgress, [0, 1], ["12%", "-24%"])
   const imageRotate = useTransform(scrollYProgress, [0, 0.5, 1], [-4, 1, 4])
 
   const laugh = () => {
@@ -934,16 +960,9 @@ function AlluLaughSection() {
       ref={sectionRef}
       id="laugh"
       data-testid="allu-laugh-section"
-      className="relative scroll-mt-20 overflow-hidden border-y-2 border-black bg-[#f5cb45] py-20 text-black lg:py-28"
+      className="relative scroll-mt-20 overflow-hidden border-y-2 border-black bg-[#f5cb45] py-16 text-black lg:py-24"
     >
-      <motion.p
-        aria-hidden
-        className="pointer-events-none absolute top-4 whitespace-nowrap font-display text-[clamp(5rem,15vw,15rem)] font-black uppercase leading-none tracking-[-0.08em] text-[#d83a2e]"
-        style={{ x: wordX }}
-      >
-        HAHAHA HAHAHA HAHAHA
-      </motion.p>
-      <div className="relative z-10 mx-auto grid max-w-[1500px] gap-12 px-5 pt-24 sm:px-8 lg:grid-cols-[.85fr_1.15fr] lg:items-center lg:px-12">
+      <div className="relative z-10 mx-auto grid max-w-[1500px] gap-12 px-5 sm:px-8 lg:grid-cols-[.85fr_1.15fr] lg:items-center lg:px-12">
         <div>
           <p className="inline-flex rotate-[-3deg] items-center gap-2 border-2 border-black bg-[#1667ff] px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-[4px_4px_0_#111]">
             <Music2 size={14} /> Reaction unlocked
@@ -970,14 +989,50 @@ function AlluLaughSection() {
           style={{ rotate: imageRotate }}
           whileHover={{ scale: 1.015 }}
         >
-          <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] border-2 border-black bg-[#d83a2e] shadow-[12px_14px_0_#1667ff]">
+          <div
+            data-testid="allu-meme-frame"
+            className="relative aspect-video overflow-hidden rounded-[2rem] border-2 border-black bg-[#d83a2e] shadow-[12px_14px_0_#1667ff]"
+          >
             <Image
-              src="/images/allu-laugh.webp"
-              alt="An original campaign-style parody portrait of Allu Arjun laughing in a colorful cinema booth"
+              src="/images/allu-laugh-meme.png"
+              alt="Allu Arjun laughing openly at an audience event"
               fill
               sizes="(max-width: 1024px) 100vw, 60vw"
               className="object-cover object-center"
             />
+            <div
+              aria-hidden
+              data-testid="mouth-laugh-words"
+              className="pointer-events-none absolute left-[53%] top-[52%] z-10"
+            >
+              {["HA!", "HAHA!", "HAHAHA!"].map((word, index) => (
+                <motion.span
+                  key={word}
+                  className="absolute left-0 top-0 whitespace-nowrap font-display text-[clamp(1.25rem,3.6vw,3.4rem)] font-black uppercase leading-none tracking-[-0.06em] text-[#f5cb45]"
+                  style={{
+                    WebkitTextStroke: "2px #11100d",
+                    textShadow: "4px 4px 0 #d83a2e",
+                  }}
+                  initial={{ x: 0, y: 0, opacity: 0, scale: 0.2, rotate: -8 }}
+                  animate={{
+                    x: [0, 48 + index * 42, 92 + index * 64],
+                    y: [0, -24 - index * 32, -62 - index * 48],
+                    opacity: [0, 1, 1, 0],
+                    scale: [0.2, 0.9, 1.16, 1.25],
+                    rotate: [-8, index * 4, index * 7],
+                  }}
+                  transition={{
+                    duration: 1.75,
+                    delay: index * 0.38,
+                    repeat: Infinity,
+                    repeatDelay: 1.05,
+                    ease: [0.2, 0.8, 0.2, 1],
+                  }}
+                >
+                  {word}
+                </motion.span>
+              ))}
+            </div>
           </div>
           {[
             ["LOL", "-left-4 top-[12%] -rotate-12 bg-white"],
