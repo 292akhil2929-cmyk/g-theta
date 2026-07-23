@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Archivo_Black, Noto_Sans_Telugu, Space_Grotesk } from "next/font/google"
+import { Archivo_Black, Space_Grotesk } from "next/font/google"
 import "./globals.css"
 import { CartProvider } from "@/components/cart-context"
 import { ClickSpark } from "@/components/fx/click-spark"
@@ -11,7 +11,6 @@ import { SmoothScroll } from "@/components/smooth-scroll"
 
 const display = Archivo_Black({ subsets: ["latin"], variable: "--font-display-face", weight: "400" })
 const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-grotesk" })
-const telugu = Noto_Sans_Telugu({ subsets: ["telugu"], variable: "--font-telugu-face" })
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://g-theta-rho.vercel.app"),
@@ -27,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${grotesk.variable} ${telugu.variable}`}>
+    <html lang="en" className={`${display.variable} ${grotesk.variable}`}>
       <body>
         <div className="grain" />
         <CartProvider>

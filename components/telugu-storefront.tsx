@@ -1,20 +1,30 @@
 "use client"
 
 import Image from "next/image"
-import { useMemo, useState } from "react"
-import { AnimatePresence, motion } from "motion/react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useScroll,
+  useSpring,
+  useTransform,
+} from "motion/react"
 import {
   ArrowDown,
   ArrowUpRight,
   Check,
   Menu,
+  Music2,
   Play,
   ShoppingBag,
   Sparkles,
   Star,
   Ticket,
   Volume2,
+  VolumeX,
   X,
+  Zap,
 } from "lucide-react"
 import { useCart } from "@/components/cart-context"
 import { HoodieSvg } from "@/components/hoodie-svg"
@@ -24,44 +34,42 @@ import { products, SIZES, type Product } from "@/lib/products"
 
 const dropCopy: Record<
   string,
-  { line: string; telugu: string; ink: string; badge: string; edition: string }
+  { line: string; ink: string; badge: string; edition: string }
 > = {
   "gt-baavundi": {
     line: "BAAVUNDI.",
-    telugu: "బావుంది.",
     ink: "#f5cb45",
     badge: "Boss approved",
     edition: "01 / 100",
   },
   "gt-manakenduku": {
     line: "MANAKENDUKU?",
-    telugu: "మనకెందుకు?",
     ink: "#f3ead9",
     badge: "Peace department",
     edition: "02 / 100",
   },
   "gt-anthega": {
     line: "ANTHE GA.",
-    telugu: "అంతే గా.",
     ink: "#d83a2e",
     badge: "Logic final",
     edition: "03 / 100",
   },
   "gt-ayyayyo": {
     line: "AYYAYYO.",
-    telugu: "అయ్యయ్యో.",
     ink: "#11100d",
     badge: "Instant reaction",
     edition: "04 / 100",
   },
 }
 
-const paper = Array.from({ length: 22 }, (_, index) => ({
+const paper = Array.from({ length: 28 }, (_, index) => ({
   id: index,
   left: (index * 37) % 97,
-  delay: (index % 7) * 0.08,
+  top: (index * 61) % 93,
+  delay: (index % 8) * 0.08,
   rotate: (index * 53) % 180,
   drift: (index % 2 === 0 ? 1 : -1) * (25 + (index % 5) * 14),
+  color: ["#fff4da", "#f5cb45", "#ff3e91", "#1667ff", "#d83a2e"][index % 5],
 }))
 
 const marquee = [
@@ -72,6 +80,10 @@ const marquee = [
   "NO BORING PRINTS",
   "FULL THEATRE ENERGY",
 ]
+
+function emitSound(name: "laugh" | "sting" | "cheer" | "whoosh") {
+  window.dispatchEvent(new CustomEvent("gtheta-sound", { detail: name }))
+}
 
 function BrandLockup({ compact = false }: { compact?: boolean }) {
   return (
@@ -85,10 +97,202 @@ function BrandLockup({ compact = false }: { compact?: boolean }) {
         <span className="block font-display text-sm font-black uppercase tracking-[0.18em]">
           G Theta
         </span>
-        <span className="block text-[8px] font-bold uppercase tracking-[0.3em] text-foreground/55">
+        <span className="block text-[8px] font-bold uppercase tracking-[0.3em] text-current opacity-55">
           Meme material
         </span>
       </span>
+    </button>
+  )
+}
+
+function ScrollFunLayer() {
+  const { scrollYProgress } = useScroll()
+  const progress = useSpring(scrollYProgress, { stiffness: 100, damping: 22, mass: 0.35 })
+  const paperY = useTransform(scrollYProgress, [0, 1], ["-12vh", "115vh"])
+  const mouseX = useMotionValue(-300)
+  const mouseY = useMotionValue(-300)
+  const glowX = useSpring(mouseX, { stiffness: 90, damping: 22 })
+  const glowY = useSpring(mouseY, { stiffness: 90, damping: 22 })
+
+  useEffect(() => {
+    const follow = (event: PointerEvent) => {
+      mouseX.set(event.clientX - 180)
+      mouseY.set(event.clientY - 180)
+    }
+    window.addEventListener("pointermove", follow, { passive: true })
+    return () => window.removeEventListener("pointermove", follow)
+  }, [mouseX, mouseY])
+
+  return (
+    <>
+      <motion.div
+        aria-hidden
+        className="pointer-events-none fixed z-[42] hidden h-[360px] w-[360px] rounded-full bg-[#f5cb45]/10 blur-[90px] lg:block"
+        style={{ x: glowX, y: glowY }}
+      />
+      <div
+        aria-hidden
+        data-testid="scroll-paper-layer"
+        className="pointer-events-none fixed inset-0 z-[41] overflow-hidden"
+      >
+        <motion.div className="absolute inset-x-0 -top-[120vh] h-[230vh]" style={{ y: paperY }}>
+          {paper.map((piece) => (
+            <motion.span
+              key={piece.id}
+              className="absolute h-4 w-2.5 shadow-[2px_3px_0_rgba(0,0,0,.2)] sm:h-5 sm:w-3"
+              style={{
+                left: `${piece.left}%`,
+                top: `${piece.top}%`,
+                backgroundColor: piece.color,
+              }}
+              animate={{
+                x: [0, piece.drift, -piece.drift * 0.35, 0],
+                rotate: [piece.rotate, piece.rotate + 230, piece.rotate + 480],
+              }}
+              transition={{
+                duration: 4.6 + (piece.id % 5),
+                delay: piece.delay,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </motion.div>
+      </div>
+      <aside className="pointer-events-none fixed right-3 top-1/2 z-[45] hidden -translate-y-1/2 items-center gap-3 xl:flex">
+        <div className="relative h-48 w-1 overflow-hidden rounded-full bg-white/20">
+          <motion.div
+            className="absolute inset-x-0 top-0 h-full origin-top bg-[#f5cb45]"
+            style={{ scaleY: progress }}
+          />
+        </div>
+        <div className="flex h-48 flex-col justify-between text-[8px] font-black uppercase tracking-[0.16em] text-white">
+          <span>Entry</span>
+          <span>Drop</span>
+          <span>Boss</span>
+          <span>Laugh</span>
+          <span>Climax</span>
+        </div>
+      </aside>
+    </>
+  )
+}
+
+function SoundController() {
+  const [enabled, setEnabled] = useState(false)
+  const contextRef = useRef<AudioContext | null>(null)
+  const humRef = useRef<OscillatorNode | null>(null)
+  const enabledRef = useRef(false)
+
+  useEffect(() => {
+    enabledRef.current = enabled
+  }, [enabled])
+
+  useEffect(() => {
+    const play = (event: Event) => {
+      if (!enabledRef.current || !contextRef.current) return
+      const context = contextRef.current
+      const name = (event as CustomEvent<string>).detail
+      const now = context.currentTime
+
+      if (name === "laugh") {
+        ;[0, 0.11, 0.23, 0.36].forEach((delay, index) => {
+          const oscillator = context.createOscillator()
+          const gain = context.createGain()
+          oscillator.type = index % 2 ? "square" : "triangle"
+          oscillator.frequency.setValueAtTime(320 + index * 46, now + delay)
+          oscillator.frequency.exponentialRampToValueAtTime(520 + index * 38, now + delay + 0.08)
+          gain.gain.setValueAtTime(0.0001, now + delay)
+          gain.gain.exponentialRampToValueAtTime(0.045, now + delay + 0.015)
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.1)
+          oscillator.connect(gain).connect(context.destination)
+          oscillator.start(now + delay)
+          oscillator.stop(now + delay + 0.11)
+        })
+        return
+      }
+
+      if (name === "cheer" || name === "whoosh") {
+        const duration = name === "cheer" ? 0.75 : 0.35
+        const buffer = context.createBuffer(1, context.sampleRate * duration, context.sampleRate)
+        const data = buffer.getChannelData(0)
+        for (let index = 0; index < data.length; index += 1) {
+          data[index] = Math.random() * 2 - 1
+        }
+        const source = context.createBufferSource()
+        const filter = context.createBiquadFilter()
+        const gain = context.createGain()
+        source.buffer = buffer
+        filter.type = "bandpass"
+        filter.frequency.setValueAtTime(name === "cheer" ? 1100 : 600, now)
+        filter.frequency.exponentialRampToValueAtTime(name === "cheer" ? 2100 : 2200, now + duration)
+        gain.gain.setValueAtTime(0.0001, now)
+        gain.gain.exponentialRampToValueAtTime(name === "cheer" ? 0.08 : 0.045, now + 0.08)
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration)
+        source.connect(filter).connect(gain).connect(context.destination)
+        source.start()
+        return
+      }
+
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      oscillator.type = "sawtooth"
+      oscillator.frequency.setValueAtTime(180, now)
+      oscillator.frequency.exponentialRampToValueAtTime(760, now + 0.16)
+      gain.gain.setValueAtTime(0.0001, now)
+      gain.gain.exponentialRampToValueAtTime(0.055, now + 0.025)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22)
+      oscillator.connect(gain).connect(context.destination)
+      oscillator.start()
+      oscillator.stop(now + 0.24)
+    }
+    window.addEventListener("gtheta-sound", play)
+    return () => window.removeEventListener("gtheta-sound", play)
+  }, [])
+
+  const toggle = () => {
+    if (enabled) {
+      humRef.current?.stop()
+      humRef.current = null
+      void contextRef.current?.close()
+      contextRef.current = null
+      setEnabled(false)
+      return
+    }
+
+    try {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      if (!AudioCtx) return
+      const context = new AudioCtx()
+      const hum = context.createOscillator()
+      const gain = context.createGain()
+      const filter = context.createBiquadFilter()
+      hum.type = "sawtooth"
+      hum.frequency.value = 54
+      filter.type = "lowpass"
+      filter.frequency.value = 120
+      gain.gain.value = 0.012
+      hum.connect(filter).connect(gain).connect(context.destination)
+      hum.start()
+      contextRef.current = context
+      humRef.current = hum
+      enabledRef.current = true
+      setEnabled(true)
+      window.setTimeout(() => emitSound("sting"), 40)
+    } catch {}
+  }
+
+  return (
+    <button
+      data-testid="sound-toggle"
+      onClick={toggle}
+      aria-pressed={enabled}
+      className="fixed bottom-3 right-3 z-[90] flex items-center gap-2 rounded-full border-2 border-black bg-[#f5cb45] px-3 py-2.5 text-[9px] font-black uppercase tracking-[0.12em] text-black shadow-[4px_4px_0_#d83a2e] transition hover:-translate-y-1 sm:bottom-4 sm:right-4 sm:px-4 sm:py-3 sm:text-[10px] sm:tracking-[0.15em]"
+    >
+      {enabled ? <Volume2 size={16} fill="currentColor" /> : <VolumeX size={16} />}
+      Sound {enabled ? "on" : "off"}
     </button>
   )
 }
@@ -99,7 +303,8 @@ function SiteNav() {
   const links = [
     ["#drop", "Drop 01"],
     ["#lookbook", "Lookbook"],
-    ["#memes", "Meme hall"],
+    ["#memes", "Boss says"],
+    ["#laugh", "Laugh"],
     ["#quality", "Quality"],
   ] as const
 
@@ -112,7 +317,6 @@ function SiteNav() {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0a0906]/88 backdrop-blur-xl">
       <div className="flex h-[72px] items-center justify-between px-4 sm:px-6 lg:px-10">
         <BrandLockup compact />
-
         <nav className="hidden items-center gap-7 lg:flex">
           {links.map(([href, label]) => (
             <button
@@ -124,7 +328,6 @@ function SiteNav() {
             </button>
           ))}
         </nav>
-
         <div className="flex items-center gap-2">
           <button
             id="nav-cart"
@@ -147,7 +350,6 @@ function SiteNav() {
           </button>
         </div>
       </div>
-
       <AnimatePresence>
         {open && (
           <motion.nav
@@ -214,7 +416,7 @@ function WhistleButton() {
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-[#f5cb45] transition group-hover:rotate-12">
           <Volume2 size={16} fill="currentColor" />
         </span>
-        Whistle podu
+        Whistle!
       </button>
       <AnimatePresence>
         {burst > 0 && (
@@ -226,11 +428,11 @@ function WhistleButton() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {paper.map((piece) => (
+            {paper.slice(0, 22).map((piece) => (
               <motion.span
                 key={piece.id}
-                className="absolute bottom-[8%] h-5 w-3 bg-[#f7f0df] shadow-lg"
-                style={{ left: `${piece.left}%` }}
+                className="absolute bottom-[8%] h-5 w-3 shadow-lg"
+                style={{ left: `${piece.left}%`, backgroundColor: piece.color }}
                 initial={{ y: 0, rotate: 0, opacity: 0 }}
                 animate={{
                   x: piece.drift,
@@ -249,6 +451,9 @@ function WhistleButton() {
 }
 
 function Hero() {
+  const { scrollYProgress } = useScroll()
+  const titleY = useTransform(scrollYProgress, [0, 0.16], [0, 150])
+
   return (
     <section id="top" className="relative min-h-[100svh] overflow-hidden bg-black pt-[72px]">
       <Image
@@ -268,7 +473,7 @@ function Hero() {
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100svh-72px)] max-w-[1600px] flex-col justify-between px-5 pb-8 pt-28 sm:px-8 sm:pt-12 lg:px-14 lg:pb-10 lg:pt-16">
-        <div className="max-w-3xl">
+        <motion.div className="max-w-3xl" style={{ y: titleY }}>
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -293,15 +498,15 @@ function Hero() {
             transition={{ duration: 0.7, delay: 0.25 }}
             className="mt-7 max-w-xl border-l-4 border-[#d83a2e] pl-4"
           >
-            <p className="font-telugu text-xl font-black leading-tight sm:text-2xl">
-              మీ రియాక్షన్. మీ హూడీ.
+            <p className="font-display text-xl font-black uppercase leading-tight text-[#f5cb45] sm:text-2xl">
+              Your reaction. Your hoodie.
             </p>
             <p className="mt-2 max-w-md text-sm leading-6 text-white/65 sm:text-base">
               Telugu internet culture, cut in heavyweight cotton. Built for the first-day,
               first-show person in you.
             </p>
           </motion.div>
-        </div>
+        </motion.div>
 
         <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
           <div className="flex flex-wrap gap-3">
@@ -320,7 +525,7 @@ function Hero() {
               ))}
             </div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/75">
-              Crowd rating: paperlu egiripoyayi
+              Crowd rating: papers went flying
             </p>
           </div>
         </div>
@@ -332,7 +537,7 @@ function Hero() {
 function TheatreMarquee() {
   const items = [...marquee, ...marquee]
   return (
-    <div className="overflow-hidden border-y border-black bg-[#f5cb45] py-3 text-black">
+    <div className="overflow-hidden border-y-2 border-black bg-[#f5cb45] py-3 text-black">
       <div className="marquee-track gap-8">
         {items.map((item, index) => (
           <div key={`${item}-${index}`} className="flex items-center gap-8 whitespace-nowrap">
@@ -349,83 +554,82 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
   const { addItem } = useCart()
   const [size, setSize] = useState("L")
   const copy = dropCopy[product.id]
+  const colors = ["#fff4da", "#f5cb45", "#ff8abb", "#74a7ff"]
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 70, rotate: index % 2 ? 2 : -2 }}
+      whileInView={{ opacity: 1, y: 0, rotate: 0 }}
+      whileHover={{ y: -12, rotate: index % 2 ? -1 : 1 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.65, delay: (index % 2) * 0.08 }}
-      className="group overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#11100d]"
+      className="group overflow-hidden rounded-[1.75rem] border-2 border-black text-black shadow-[7px_8px_0_#11100d]"
+      style={{ backgroundColor: colors[index % colors.length] }}
     >
-      <div className="relative aspect-[4/4.7] overflow-hidden bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,.14),transparent_52%)]">
-        <span className="absolute left-5 top-5 z-10 rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] backdrop-blur-md">
+      <div className="relative aspect-[4/4.7] overflow-hidden bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,.75),transparent_52%)]">
+        <span className="absolute left-5 top-5 z-10 rounded-full border-2 border-black bg-white px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em]">
           {copy.badge}
         </span>
-        <span className="absolute right-5 top-5 z-10 font-mono text-[10px] text-white/45">
+        <span className="absolute right-5 top-5 z-10 font-mono text-[10px] text-black/55">
           {copy.edition}
         </span>
         <motion.div
           className="absolute inset-x-[14%] bottom-[5%] top-[8%]"
-          whileHover={{ scale: 1.04, rotate: index % 2 ? 1.2 : -1.2 }}
+          whileHover={{ scale: 1.06, rotate: index % 2 ? 1.2 : -1.2 }}
           transition={{ type: "spring", stiffness: 220, damping: 18 }}
         >
           <HoodieSvg
             colorFrom={product.colorFrom}
             colorTo={product.colorTo}
-            className="h-full w-full drop-shadow-[0_28px_28px_rgba(0,0,0,.45)]"
+            className="h-full w-full drop-shadow-[0_28px_28px_rgba(0,0,0,.35)]"
           />
           <div
-            className="pointer-events-none absolute left-1/2 top-[42%] w-[40%] -translate-x-1/2 -rotate-2 text-center"
+            className="pointer-events-none absolute left-1/2 top-[43%] w-[44%] -translate-x-1/2 -rotate-2 text-center"
             style={{ color: copy.ink }}
           >
             <p className="font-display text-[clamp(.8rem,2.2vw,1.65rem)] font-black uppercase leading-none tracking-[-0.04em]">
               {copy.line}
             </p>
-            <p className="font-telugu mt-1 text-[clamp(.55rem,1.2vw,.9rem)] font-black">
-              {copy.telugu}
-            </p>
           </div>
         </motion.div>
-        <span className="absolute bottom-5 left-5 rounded-full bg-white px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-black">
+        <span className="absolute bottom-5 left-5 rounded-full border-2 border-black bg-white px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em]">
           480 GSM
         </span>
       </div>
 
-      <div className="border-t border-white/10 p-5 sm:p-6">
+      <div className="border-t-2 border-black p-5 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[#f5cb45]">
+            <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[#d83a2e]">
               {product.code}
             </p>
             <h3 className="mt-1 font-display text-2xl font-black uppercase">{product.name}</h3>
           </div>
           <p className="font-display text-xl font-black">₹{product.price.toLocaleString("en-IN")}</p>
         </div>
-
         <div className="mt-5 flex flex-wrap gap-1.5">
           {SIZES.map((item) => (
             <button
               key={item}
               onClick={() => setSize(item)}
               aria-label={`Select size ${item}`}
-              className={`flex h-8 min-w-8 items-center justify-center rounded-full border px-2 text-[10px] font-black transition ${
-                size === item
-                  ? "border-[#f5cb45] bg-[#f5cb45] text-black"
-                  : "border-white/15 text-white/55 hover:border-white/50 hover:text-white"
+              className={`flex h-8 min-w-8 items-center justify-center rounded-full border-2 border-black px-2 text-[10px] font-black transition ${
+                size === item ? "bg-black text-[#f5cb45]" : "bg-white/55 hover:bg-white"
               }`}
             >
               {item}
             </button>
           ))}
         </div>
-
         <button
-          onClick={() => addItem(product, size)}
-          className="mt-5 flex w-full items-center justify-between rounded-full border border-white/15 px-5 py-3.5 text-xs font-black uppercase tracking-[0.16em] transition hover:border-[#d83a2e] hover:bg-[#d83a2e]"
+          onClick={() => {
+            addItem(product, size)
+            emitSound("sting")
+          }}
+          className="mt-5 flex w-full items-center justify-between rounded-full border-2 border-black bg-white/55 px-5 py-3.5 text-xs font-black uppercase tracking-[0.16em] transition hover:bg-[#d83a2e] hover:text-white"
         >
           Add to bag
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-black">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-white">
             <ArrowUpRight size={15} />
           </span>
         </button>
@@ -436,23 +640,27 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
 
 function DropSection() {
   return (
-    <section id="drop" className="scroll-mt-20 px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+    <section
+      id="drop"
+      className="scroll-mt-20 overflow-hidden bg-[#d83a2e] px-5 py-24 text-[#f5cb45] sm:px-8 lg:px-12 lg:py-32"
+    >
       <div className="mx-auto max-w-[1500px]">
-        <div className="grid gap-8 border-b border-white/10 pb-10 lg:grid-cols-[1fr_.65fr] lg:items-end">
+        <div className="grid gap-8 border-b-2 border-[#f5cb45]/45 pb-10 lg:grid-cols-[1fr_.65fr] lg:items-end">
           <div>
-            <p className="eyebrow">Now playing · Drop 01</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white">
+              Now playing · Drop 01
+            </p>
             <h2 className="mt-4 max-w-5xl font-display text-[clamp(3.5rem,9vw,8.5rem)] font-black uppercase leading-[0.78] tracking-[-0.055em]">
               Four moods.
-              <span className="block text-[#d83a2e]">Zero context.</span>
+              <span className="block text-white">Zero context.</span>
             </h2>
           </div>
-          <p className="max-w-lg text-base leading-7 text-white/55 lg:justify-self-end">
+          <p className="max-w-lg text-base font-semibold leading-7 text-white/80 lg:justify-self-end">
             Not screenshots pasted on cloth. Each line is rebuilt as wearable typography, screen
             printed on dense 480 GSM brushed cotton with an oversized Hyderabad fit.
           </p>
         </div>
-
-        <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-10 grid gap-7 md:grid-cols-2 xl:grid-cols-4">
           {products.slice(0, 4).map((product, index) => (
             <ProductCard key={product.id} product={product} index={index} />
           ))}
@@ -464,8 +672,8 @@ function DropSection() {
 
 function Lookbook() {
   return (
-    <section id="lookbook" className="scroll-mt-16 px-3 py-10 sm:px-6">
-      <div className="relative mx-auto min-h-[74svh] max-w-[1580px] overflow-hidden rounded-[2rem] border border-white/10">
+    <section id="lookbook" className="scroll-mt-16 bg-[#f5cb45] px-3 py-10 sm:px-6">
+      <div className="relative mx-auto min-h-[74svh] max-w-[1580px] overflow-hidden rounded-[2rem] border-2 border-black shadow-[8px_8px_0_#d83a2e]">
         <Image
           src="/images/lookbook.webp"
           alt="Four South Indian models in red, cream, black, and yellow oversized hoodies"
@@ -474,6 +682,13 @@ function Lookbook() {
           className="object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/5 to-black/25" />
+        <motion.div
+          className="absolute right-5 top-5 z-10 rotate-6 rounded-full border-2 border-black bg-[#ff3e91] px-5 py-3 font-display text-xl font-black uppercase text-black shadow-[4px_4px_0_#f5cb45]"
+          animate={{ rotate: [6, -3, 6], scale: [1, 1.08, 1] }}
+          transition={{ duration: 2.4, repeat: Infinity }}
+        >
+          Wear the reaction
+        </motion.div>
         <div className="absolute inset-x-0 bottom-0 z-10 grid gap-6 p-6 sm:p-9 lg:grid-cols-[1fr_auto] lg:items-end lg:p-12">
           <div>
             <p className="eyebrow">Front bench uniform</p>
@@ -482,12 +697,12 @@ function Lookbook() {
               <span className="block text-[#f5cb45]">Inside theatre.</span>
             </h2>
           </div>
-          <div className="max-w-sm rounded-2xl border border-white/15 bg-black/65 p-5 backdrop-blur-xl">
+          <div className="max-w-sm rounded-2xl border-2 border-white bg-black/70 p-5 backdrop-blur-xl">
             <div className="flex items-center gap-2 text-[#f5cb45]">
               <Sparkles size={16} />
               <span className="text-[10px] font-black uppercase tracking-[0.22em]">The fit</span>
             </div>
-            <p className="mt-3 text-sm leading-6 text-white/70">
+            <p className="mt-3 text-sm leading-6 text-white/75">
               Drop shoulder. Boxy torso. Heavy rib. Soft inside. Built to survive interval samosas,
               late-night rides and unsolicited movie reviews.
             </p>
@@ -500,13 +715,13 @@ function Lookbook() {
 
 function ChiruApproval() {
   return (
-    <section id="memes" className="scroll-mt-20 px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
-      <div className="mx-auto grid max-w-[1500px] overflow-hidden rounded-[2rem] border border-white/10 bg-[#f1e8d6] text-[#11100d] lg:grid-cols-2">
+    <section id="memes" className="scroll-mt-20 bg-[#fff4da] px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
+      <div className="mx-auto grid max-w-[1500px] overflow-hidden rounded-[2rem] border-2 border-black bg-[#f1e8d6] text-[#11100d] shadow-[10px_10px_0_#d83a2e] lg:grid-cols-2">
         <motion.div
           initial={{ opacity: 0, x: -40 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: "-100px" }}
-          className="relative min-h-[560px] lg:min-h-[760px]"
+          className="relative min-h-[560px] overflow-visible lg:min-h-[760px]"
         >
           <Image
             src="/images/chiru-approval.webp"
@@ -515,24 +730,53 @@ function ChiruApproval() {
             sizes="(max-width: 1024px) 100vw, 50vw"
             className="object-cover object-center"
           />
+          <motion.button
+            data-testid="chiru-speech"
+            onClick={() => emitSound("sting")}
+            initial={{ opacity: 0, scale: 0.15, x: -50, y: 40 }}
+            whileInView={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+            whileHover={{ scale: 1.08, rotate: -2 }}
+            viewport={{ once: true, margin: "-120px" }}
+            transition={{ type: "spring", stiffness: 180, damping: 12, delay: 0.35 }}
+            className="speech-bubble absolute left-[53%] top-[39%] z-20 rounded-[45%] border-2 border-black bg-[#f5cb45] px-7 py-5 text-center font-display text-[clamp(1.5rem,3vw,3rem)] font-black uppercase leading-[0.85] text-[#d83a2e] shadow-[7px_7px_0_#1667ff]"
+          >
+            Baavundi!
+          </motion.button>
+          {[
+            ["IT'S NICE!", "left-[5%] top-[10%] -rotate-6 bg-white"],
+            ["SUPER!", "right-[4%] top-[68%] rotate-6 bg-[#ff3e91]"],
+            ["APPROVED!", "left-[8%] bottom-[8%] rotate-3 bg-[#1667ff] text-white"],
+          ].map(([label, position], index) => (
+            <motion.span
+              key={label}
+              initial={{ opacity: 0, scale: 0 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ type: "spring", delay: 0.55 + index * 0.14 }}
+              animate={{ y: [0, -8, 0] }}
+              className={`absolute z-10 rounded-full border-2 border-black px-4 py-2 text-xs font-black uppercase tracking-[0.15em] shadow-[4px_4px_0_#111] ${position}`}
+            >
+              {label}
+            </motion.span>
+          ))}
           <span className="absolute bottom-5 left-5 rounded-full bg-black/75 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-white backdrop-blur">
             Original parody portrait
           </span>
         </motion.div>
 
-        <div className="relative flex flex-col justify-between overflow-hidden p-7 sm:p-12 lg:p-16">
-          <span className="absolute -right-10 -top-16 font-display text-[16rem] font-black leading-none text-[#d83a2e]/10">
+        <div className="relative flex flex-col justify-between overflow-hidden bg-[#f5cb45] p-7 sm:p-12 lg:p-16">
+          <span className="absolute -right-10 -top-16 font-display text-[16rem] font-black leading-none text-[#d83a2e]/15">
             “
           </span>
           <div className="relative">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#d83a2e]">
               Boss verdict · Approved
             </p>
-            <h2 className="mt-8 font-display text-[clamp(3.35rem,11vw,11rem)] font-black uppercase leading-[0.7] tracking-[-0.07em]">
+            <h2 className="mt-8 font-display text-[clamp(3.35rem,7vw,7rem)] font-black uppercase leading-[0.7] tracking-[-0.07em]">
               Baavundi.
             </h2>
-            <p className="font-telugu mt-6 text-[clamp(2.1rem,5vw,4.8rem)] font-black leading-none text-[#d83a2e]">
-              బావుంది.
+            <p className="mt-7 max-w-md font-display text-3xl font-black uppercase leading-none text-[#d83a2e] sm:text-5xl">
+              It&apos;s nice. Ship it.
             </p>
           </div>
           <div className="relative mt-20 border-t-2 border-black pt-6">
@@ -553,29 +797,154 @@ function ChiruApproval() {
   )
 }
 
+function AlluLaughSection() {
+  const sectionRef = useRef<HTMLElement>(null)
+  const [burst, setBurst] = useState(0)
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"],
+  })
+  const wordX = useTransform(scrollYProgress, [0, 1], ["12%", "-24%"])
+  const imageRotate = useTransform(scrollYProgress, [0, 0.5, 1], [-4, 1, 4])
+
+  const laugh = () => {
+    setBurst((value) => value + 1)
+    emitSound("laugh")
+  }
+
+  return (
+    <section
+      ref={sectionRef}
+      id="laugh"
+      data-testid="allu-laugh-section"
+      className="relative scroll-mt-20 overflow-hidden border-y-2 border-black bg-[#f5cb45] py-20 text-black lg:py-28"
+    >
+      <motion.p
+        aria-hidden
+        className="pointer-events-none absolute top-4 whitespace-nowrap font-display text-[clamp(5rem,15vw,15rem)] font-black uppercase leading-none tracking-[-0.08em] text-[#d83a2e]"
+        style={{ x: wordX }}
+      >
+        HAHAHA HAHAHA HAHAHA
+      </motion.p>
+      <div className="relative z-10 mx-auto grid max-w-[1500px] gap-12 px-5 pt-24 sm:px-8 lg:grid-cols-[.85fr_1.15fr] lg:items-center lg:px-12">
+        <div>
+          <p className="inline-flex rotate-[-3deg] items-center gap-2 border-2 border-black bg-[#1667ff] px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-[4px_4px_0_#111]">
+            <Music2 size={14} /> Reaction unlocked
+          </p>
+          <h2 className="mt-8 font-display text-[clamp(3.2rem,10vw,10rem)] font-black uppercase leading-[0.72] tracking-[-0.065em]">
+            Can&apos;t.
+            <span className="block text-[#d83a2e]">Stop.</span>
+            Laughing.
+          </h2>
+          <p className="mt-7 max-w-lg text-lg font-bold leading-7">
+            That exact face when the hoodie hits harder than the movie&apos;s interval block.
+          </p>
+          <button
+            data-testid="laugh-button"
+            onClick={laugh}
+            className="mt-8 inline-flex items-center gap-3 rounded-full border-2 border-black bg-[#ff3e91] px-6 py-4 text-sm font-black uppercase tracking-[0.14em] shadow-[6px_6px_0_#1667ff] transition hover:-translate-y-1 hover:shadow-[9px_9px_0_#1667ff]"
+          >
+            <Zap size={18} fill="currentColor" /> Make him laugh
+          </button>
+        </div>
+
+        <motion.div
+          className="relative mx-auto w-full max-w-3xl"
+          style={{ rotate: imageRotate }}
+          whileHover={{ scale: 1.015 }}
+        >
+          <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] border-2 border-black bg-[#d83a2e] shadow-[12px_14px_0_#1667ff]">
+            <Image
+              src="/images/allu-laugh.webp"
+              alt="An original campaign-style parody portrait of Allu Arjun laughing in a colorful cinema booth"
+              fill
+              sizes="(max-width: 1024px) 100vw, 60vw"
+              className="object-cover object-center"
+            />
+          </div>
+          {[
+            ["LOL", "-left-4 top-[12%] -rotate-12 bg-white"],
+            ["MOOD", "-right-3 top-[8%] rotate-12 bg-[#ff3e91]"],
+            ["FULL HAPPY", "left-[4%] -bottom-5 rotate-6 bg-[#d83a2e] text-white"],
+            ["10/10", "right-[8%] -bottom-4 -rotate-6 bg-[#1667ff] text-white"],
+          ].map(([label, position], index) => (
+            <motion.span
+              key={label}
+              className={`absolute rounded-full border-2 border-black px-5 py-3 font-display text-xl font-black uppercase shadow-[5px_5px_0_#111] ${position}`}
+              animate={{ y: [0, -10 - index * 2, 0], rotate: [0, index % 2 ? 4 : -4, 0] }}
+              transition={{ duration: 2 + index * 0.25, repeat: Infinity }}
+            >
+              {label}
+            </motion.span>
+          ))}
+          <AnimatePresence>
+            {burst > 0 && (
+              <motion.div
+                key={burst}
+                aria-hidden
+                className="pointer-events-none absolute inset-0 z-20"
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                {paper.slice(0, 18).map((piece) => (
+                  <motion.span
+                    key={piece.id}
+                    className="absolute left-1/2 top-1/2 rounded-full border-2 border-black px-3 py-1 text-[10px] font-black"
+                    style={{ backgroundColor: piece.color }}
+                    initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
+                    animate={{
+                      x: (piece.id % 2 ? 1 : -1) * (70 + (piece.id % 6) * 65),
+                      y: -220 + (piece.id % 7) * 75,
+                      rotate: piece.rotate + 360,
+                      opacity: [0, 1, 1, 0],
+                      scale: [0, 1.1, 1, 0.7],
+                    }}
+                    transition={{ duration: 1.25, delay: piece.delay * 0.3 }}
+                  >
+                    HA!
+                  </motion.span>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
 function MemeHall() {
   const reactions = [
     { name: "Side eye", use: "When the trailer says “pan-world”", color: "#929d52" },
-    { name: "Full happy", use: "When interval block actually lands", color: "#f5cb45" },
-    { name: "Manakenduku", use: "When the group chat starts fan wars", color: "#d83a2e" },
+    { name: "Full happy", use: "When the interval block actually lands", color: "#f5cb45" },
+    { name: "Manakenduku", use: "When the group chat starts fan wars", color: "#ff3e91" },
   ]
+
   return (
-    <section className="border-y border-white/10 bg-[#11100d] py-24 lg:py-32">
+    <section className="border-y-2 border-black bg-[#1667ff] py-24 text-white lg:py-32">
       <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
         <div className="mb-10 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
           <div>
-            <p className="eyebrow">The reaction archive</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#f5cb45]">
+              The reaction archive
+            </p>
             <h2 className="mt-3 font-display text-[clamp(3.5rem,8vw,8rem)] font-black uppercase leading-[0.8] tracking-[-0.055em]">
               Meme hall
               <span className="text-[#f5cb45]"> of fame.</span>
             </h2>
           </div>
-          <p className="max-w-md text-sm leading-6 text-white/55">
+          <p className="max-w-md text-sm font-semibold leading-6 text-white/80">
             Three expressions. Roughly ninety percent of Telugu group-chat communication.
           </p>
         </div>
-
-        <div className="relative overflow-hidden rounded-[1.75rem] border border-white/10">
+        <motion.div
+          initial={{ clipPath: "inset(0 100% 0 0)" }}
+          whileInView={{ clipPath: "inset(0 0% 0 0)" }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 1, ease: [0.2, 0.8, 0.2, 1] }}
+          className="relative overflow-hidden rounded-[1.75rem] border-2 border-black shadow-[10px_10px_0_#f5cb45]"
+        >
           <Image
             src="/images/meme-legends.webp"
             alt="A three-panel tribute to iconic Telugu comedy reaction faces"
@@ -584,30 +953,31 @@ function MemeHall() {
             sizes="100vw"
             className="h-auto w-full"
           />
-        </div>
-
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
+        </motion.div>
+        <div className="mt-8 grid gap-5 md:grid-cols-3">
           {reactions.map((reaction, index) => (
-            <motion.div
+            <motion.button
               key={reaction.name}
+              onClick={() => emitSound(index === 1 ? "laugh" : "sting")}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
+              whileHover={{ y: -8, rotate: index - 1 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.08 }}
-              className="rounded-2xl border border-white/10 p-5"
+              className="rounded-2xl border-2 border-black bg-[#fff4da] p-5 text-left text-black shadow-[6px_6px_0_#111]"
             >
               <div className="flex items-center justify-between">
                 <span
-                  className="rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-black"
+                  className="rounded-full border-2 border-black px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-black"
                   style={{ backgroundColor: reaction.color }}
                 >
                   0{index + 1}
                 </span>
-                <Play size={14} fill="currentColor" className="text-white/30" />
+                <Play size={14} fill="currentColor" />
               </div>
               <h3 className="mt-7 font-display text-3xl font-black uppercase">{reaction.name}</h3>
-              <p className="mt-2 text-sm text-white/50">{reaction.use}</p>
-            </motion.div>
+              <p className="mt-2 text-sm font-semibold text-black/60">{reaction.use}</p>
+            </motion.button>
           ))}
         </div>
       </div>
@@ -628,17 +998,23 @@ function Quality() {
     "High-density water-based ink",
     "Recyclable plastic-free mailer",
   ]
+
   return (
-    <section id="quality" className="scroll-mt-20 px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
+    <section
+      id="quality"
+      className="scroll-mt-20 bg-[#fff4da] px-5 py-24 text-black sm:px-8 lg:px-12 lg:py-36"
+    >
       <div className="mx-auto max-w-[1500px]">
         <div className="grid gap-14 lg:grid-cols-2 lg:items-start">
           <div className="lg:sticky lg:top-28">
-            <p className="eyebrow">No cheap fan merch</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#d83a2e]">
+              No cheap fan merch
+            </p>
             <h2 className="mt-4 font-display text-[clamp(4rem,9vw,9rem)] font-black uppercase leading-[0.76] tracking-[-0.06em]">
               Joke soft.
-              <span className="block text-[#f5cb45]">Hoodie hard.</span>
+              <span className="block text-[#d83a2e]">Hoodie hard.</span>
             </h2>
-            <p className="mt-8 max-w-xl text-lg leading-8 text-white/55">
+            <p className="mt-8 max-w-xl text-lg font-semibold leading-8 text-black/60">
               The meme gets the laugh. The garment earns the repeat wear. Every drop is sampled,
               washed, stretched and reworked before it reaches the front bench.
             </p>
@@ -646,9 +1022,9 @@ function Quality() {
               {checks.map((check) => (
                 <div
                   key={check}
-                  className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm font-semibold"
+                  className="flex items-center gap-3 rounded-xl border-2 border-black bg-white p-4 text-sm font-semibold shadow-[4px_4px_0_#f5cb45]"
                 >
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d83a2e]">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d83a2e] text-white">
                     <Check size={13} strokeWidth={3} />
                   </span>
                   {check}
@@ -657,20 +1033,22 @@ function Quality() {
             </div>
           </div>
 
-          <div className="grid gap-px overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/10 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             {details.map(([number, label], index) => (
               <motion.div
                 key={label}
-                initial={{ opacity: 0, scale: 0.96 }}
-                whileInView={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, scale: 0.9, rotate: index % 2 ? 4 : -4 }}
+                whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+                whileHover={{ rotate: index % 2 ? -2 : 2, scale: 1.02 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.08 }}
-                className="min-h-64 bg-[#0a0906] p-7 sm:min-h-80"
+                className="min-h-64 rounded-[1.5rem] border-2 border-black p-7 shadow-[6px_6px_0_#111] sm:min-h-80"
+                style={{ backgroundColor: ["#f5cb45", "#ff3e91", "#1667ff", "#d83a2e"][index] }}
               >
-                <p className="font-display text-[clamp(5rem,10vw,10rem)] font-black leading-none tracking-[-0.08em] text-[#f5cb45]">
+                <p className={`font-display text-[clamp(5rem,10vw,10rem)] font-black leading-none tracking-[-0.08em] ${index > 1 ? "text-white" : ""}`}>
                   {number}
                 </p>
-                <p className="mt-6 max-w-[10rem] text-xs font-black uppercase tracking-[0.2em] text-white/50">
+                <p className={`mt-6 max-w-[10rem] text-xs font-black uppercase tracking-[0.2em] ${index > 1 ? "text-white/80" : "text-black/60"}`}>
                   {label}
                 </p>
               </motion.div>
@@ -688,20 +1066,20 @@ function Footer() {
   const year = useMemo(() => new Date().getFullYear(), [])
 
   return (
-    <footer className="overflow-hidden border-t border-white/10 bg-[#d83a2e] text-white">
+    <footer className="overflow-hidden border-t-2 border-black bg-[#d83a2e] text-white">
       <div className="mx-auto grid max-w-[1500px] gap-14 px-5 py-16 sm:px-8 lg:grid-cols-[1fr_.8fr] lg:px-12 lg:py-24">
         <div>
           <BrandLockup />
           <h2 className="mt-10 max-w-4xl font-display text-[clamp(3.8rem,8vw,8rem)] font-black uppercase leading-[0.78] tracking-[-0.06em]">
             Next drop?
-            <span className="block text-[#f5cb45]">First show meeke.</span>
+            <span className="block text-[#f5cb45]">First show is yours.</span>
           </h2>
         </div>
         <form
           className="self-end"
           onSubmit={(event) => {
             event.preventDefault()
-            notify("List lo padipoyav! First-show update direct ga vastundi 🎟️")
+            notify("You're on the list! First-show updates will land here 🎟️")
             setEmail("")
           }}
         >
@@ -715,24 +1093,26 @@ function Footer() {
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="nee@email.com"
+              placeholder="you@email.com"
               className="min-w-0 flex-1 bg-transparent py-4 text-xl font-bold outline-none placeholder:text-white/45"
             />
             <button aria-label="Subscribe" className="px-4 transition hover:text-[#f5cb45]">
               <ArrowUpRight size={28} />
             </button>
           </div>
-          <p className="mt-3 text-xs text-white/65">Drop alerts only. Spam chesthe theatre bayata kaluddam.</p>
+          <p className="mt-3 text-xs text-white/65">Drop alerts only. No boring spam.</p>
         </form>
       </div>
-
       <div className="border-t border-white/20 px-5 py-5 sm:px-8 lg:px-12">
         <div className="mx-auto flex max-w-[1500px] flex-col gap-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/70 sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} G Theta · Hyderabad, India</p>
           <p>Demo storefront · Parody visuals · No real payment processed</p>
         </div>
       </div>
-      <div aria-hidden className="pointer-events-none select-none whitespace-nowrap font-display text-[21vw] font-black uppercase leading-[0.67] tracking-[-0.08em] text-[#f5cb45]">
+      <div
+        aria-hidden
+        className="pointer-events-none select-none whitespace-nowrap font-display text-[21vw] font-black uppercase leading-[0.67] tracking-[-0.08em] text-[#f5cb45]"
+      >
         G THETA
       </div>
     </footer>
@@ -742,6 +1122,8 @@ function Footer() {
 export function TeluguStorefront() {
   return (
     <>
+      <ScrollFunLayer />
+      <SoundController />
       <SiteNav />
       <main>
         <Hero />
@@ -749,6 +1131,7 @@ export function TeluguStorefront() {
         <DropSection />
         <Lookbook />
         <ChiruApproval />
+        <AlluLaughSection />
         <MemeHall />
         <Quality />
       </main>

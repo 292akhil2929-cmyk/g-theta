@@ -3,8 +3,6 @@
 @theme inline {
   --font-sans: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display-face), var(--font-grotesk), sans-serif;
-  --font-telugu: var(--font-telugu-face), var(--font-grotesk), sans-serif;
-
   --color-background: #0a0906;
   --color-foreground: #f4eee4;
   --color-muted: #15130e;
@@ -94,10 +92,6 @@ html.lenis body {
   overflow: hidden;
 }
 
-.font-telugu {
-  font-family: var(--font-telugu-face), var(--font-grotesk), sans-serif;
-}
-
 .eyebrow {
   display: flex;
   align-items: center;
@@ -141,6 +135,19 @@ html.lenis body {
   color: transparent;
   -webkit-text-stroke: 2px #f5cb45;
   text-shadow: 0 0 36px rgba(0, 0, 0, 0.45);
+}
+
+.speech-bubble::after {
+  position: absolute;
+  left: 12%;
+  bottom: -1.2rem;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-right: 2px solid #11100d;
+  border-bottom: 2px solid #11100d;
+  background: #f5cb45;
+  content: "";
+  transform: rotate(42deg) skew(-12deg, -12deg);
 }
 
 .grain {
