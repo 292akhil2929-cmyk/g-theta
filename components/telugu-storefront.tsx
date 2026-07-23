@@ -567,14 +567,16 @@ function Hero() {
         <motion.div
           key={`meher-entry-${scene}`}
           data-testid="meher-walk-in"
-          initial={{ opacity: 0, y: 120, scale: 0.48, filter: "blur(5px)" }}
+          initial={{ opacity: 0, x: 240, y: 96, scale: 0.48, rotate: 3, filter: "blur(5px)" }}
           animate={{
-            opacity: [0, 1, 1],
-            y: [120, 42, 0],
-            scale: [0.48, 0.74, 1],
-            filter: ["blur(5px)", "blur(1px)", "blur(0px)"],
+            opacity: [0, 1, 1, 1, 1, 1],
+            x: [240, 178, 118, 72, 30, 0],
+            y: [96, 58, 35, 47, 15, 0],
+            scale: [0.48, 0.58, 0.69, 0.8, 0.9, 1],
+            rotate: [3, -2, 1.5, -1, 0.5, 0],
+            filter: ["blur(5px)", "blur(2px)", "blur(1px)", "blur(0px)", "blur(0px)", "blur(0px)"],
           }}
-          transition={{ delay: 0.95, duration: 2.15, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ delay: 0.62, duration: 3.15, ease: [0.16, 1, 0.3, 1] }}
           className="relative h-full w-full origin-bottom drop-shadow-[0_30px_28px_rgba(0,0,0,.65)]"
         >
           <Image
@@ -969,22 +971,24 @@ function AlluLaughSection() {
               {[0].map((index) => (
                 <motion.span
                   key={index}
-                  className="absolute left-0 top-0 whitespace-nowrap font-display text-[clamp(3.4rem,8vw,7rem)] font-black uppercase leading-[0.72] tracking-[-0.08em] text-[#d83a2e]"
+                  className="absolute left-0 top-0 whitespace-nowrap font-display text-[clamp(3.2rem,9vw,8rem)] font-black uppercase leading-[0.72] tracking-[-0.09em] text-[#d83a2e]"
                   style={{
-                    textShadow: "4px 4px 0 #11100d",
+                    textShadow: "6px 6px 0 #11100d",
+                    transformOrigin: "left center",
                   }}
-                  initial={{ x: 0, y: 0, opacity: 0, scale: 0.08, rotate: -8 }}
+                  initial={{ x: 0, y: 0, opacity: 0, scale: 0.04, rotate: -8 }}
                   animate={{
-                    x: [0, -75, -210],
-                    y: [0, -48, -130],
-                    opacity: [0, 1, 1, 0],
-                    scale: [0.08, 0.5, 0.9, 1.1],
-                    rotate: [-8, -4, -1],
+                    x: ["0vw", "-5vw", "-30vw", "-58vw", "-76vw"],
+                    y: [0, -32, -74, -112, -145],
+                    opacity: [0, 1, 1, 1, 0],
+                    scale: [0.04, 0.22, 1.15, 2.35, 3.1],
+                    rotate: [-8, -6, -3, -1, 0],
                   }}
                   transition={{
-                    duration: 2.35,
+                    duration: 3.2,
                     repeat: Infinity,
-                    repeatDelay: 1.2,
+                    repeatDelay: 0.65,
+                    times: [0, 0.16, 0.46, 0.78, 1],
                     ease: [0.2, 0.8, 0.2, 1],
                   }}
                 >
