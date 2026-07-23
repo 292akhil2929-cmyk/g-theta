@@ -72,6 +72,17 @@ const paper = Array.from({ length: 28 }, (_, index) => ({
   color: ["#fff4da", "#f5cb45", "#ff3e91", "#1667ff", "#d83a2e"][index % 5],
 }))
 
+const heroPaper = Array.from({ length: 52 }, (_, index) => ({
+  id: index,
+  left: (index * 43) % 101,
+  delay: (index % 17) * 0.19,
+  duration: 2.8 + (index % 8) * 0.36,
+  drift: (index % 2 ? 1 : -1) * (35 + (index % 7) * 17),
+  rotate: (index * 71) % 240,
+  size: 8 + (index % 4) * 4,
+  color: ["#fff4da", "#ffffff", "#f5cb45", "#ff3e91"][index % 4],
+}))
+
 const marquee = [
   "480 GSM",
   "MADE IN HYDERABAD",
@@ -81,7 +92,7 @@ const marquee = [
   "FULL THEATRE ENERGY",
 ]
 
-function emitSound(name: "laugh" | "sting" | "cheer" | "whoosh") {
+function emitSound(name: "laugh" | "sting" | "cheer" | "whoosh" | "entry") {
   window.dispatchEvent(new CustomEvent("gtheta-sound", { detail: name }))
 }
 
@@ -195,6 +206,55 @@ function SoundController() {
       const name = (event as CustomEvent<string>).detail
       const now = context.currentTime
 
+      if (name === "entry") {
+        const notes = [
+          [1047, 0, 0.22],
+          [1397, 0.24, 0.18],
+          [1760, 0.44, 0.32],
+          [1480, 0.8, 0.2],
+          [2093, 1.04, 0.48],
+        ] as const
+
+        notes.forEach(([frequency, delay, duration], index) => {
+          const whistle = context.createOscillator()
+          const overtone = context.createOscillator()
+          const gain = context.createGain()
+          const overtoneGain = context.createGain()
+          whistle.type = "sine"
+          overtone.type = "sine"
+          whistle.frequency.setValueAtTime(frequency, now + delay)
+          whistle.frequency.exponentialRampToValueAtTime(
+            frequency * (index % 2 ? 0.96 : 1.035),
+            now + delay + duration,
+          )
+          overtone.frequency.setValueAtTime(frequency * 2.02, now + delay)
+          gain.gain.setValueAtTime(0.0001, now + delay)
+          gain.gain.exponentialRampToValueAtTime(0.115, now + delay + 0.025)
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + duration)
+          overtoneGain.gain.setValueAtTime(0.0001, now + delay)
+          overtoneGain.gain.exponentialRampToValueAtTime(0.018, now + delay + 0.02)
+          overtoneGain.gain.exponentialRampToValueAtTime(0.0001, now + delay + duration)
+          whistle.connect(gain).connect(context.destination)
+          overtone.connect(overtoneGain).connect(context.destination)
+          whistle.start(now + delay)
+          overtone.start(now + delay)
+          whistle.stop(now + delay + duration + 0.02)
+          overtone.stop(now + delay + duration + 0.02)
+        })
+
+        const thump = context.createOscillator()
+        const thumpGain = context.createGain()
+        thump.type = "sine"
+        thump.frequency.setValueAtTime(94, now)
+        thump.frequency.exponentialRampToValueAtTime(42, now + 0.5)
+        thumpGain.gain.setValueAtTime(0.16, now)
+        thumpGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55)
+        thump.connect(thumpGain).connect(context.destination)
+        thump.start()
+        thump.stop(now + 0.58)
+        return
+      }
+
       if (name === "laugh") {
         ;[0, 0.11, 0.23, 0.36].forEach((delay, index) => {
           const oscillator = context.createOscillator()
@@ -280,7 +340,10 @@ function SoundController() {
       humRef.current = hum
       enabledRef.current = true
       setEnabled(true)
-      window.setTimeout(() => emitSound("sting"), 40)
+      window.setTimeout(() => {
+        window.dispatchEvent(new Event("gtheta-replay-entry"))
+        emitSound("entry")
+      }, 60)
     } catch {}
   }
 
@@ -380,124 +443,212 @@ function SiteNav() {
   )
 }
 
-function WhistleButton() {
-  const [burst, setBurst] = useState(0)
-
-  const whistle = () => {
-    setBurst((value) => value + 1)
-    try {
-      const AudioCtx =
-        window.AudioContext ||
-        (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-      if (!AudioCtx) return
-      const context = new AudioCtx()
-      const gain = context.createGain()
-      const oscillator = context.createOscillator()
-      oscillator.type = "sine"
-      oscillator.frequency.setValueAtTime(1240, context.currentTime)
-      oscillator.frequency.exponentialRampToValueAtTime(1960, context.currentTime + 0.16)
-      oscillator.frequency.exponentialRampToValueAtTime(1510, context.currentTime + 0.42)
-      gain.gain.setValueAtTime(0.0001, context.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.16, context.currentTime + 0.03)
-      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.52)
-      oscillator.connect(gain).connect(context.destination)
-      oscillator.start()
-      oscillator.stop(context.currentTime + 0.54)
-      window.setTimeout(() => void context.close(), 700)
-    } catch {}
-  }
-
+function HeroPaperStorm() {
   return (
-    <>
-      <button
-        onClick={whistle}
-        className="group relative flex items-center gap-3 rounded-full bg-[#f5cb45] px-6 py-3.5 text-sm font-black uppercase tracking-[0.14em] text-black transition hover:-translate-y-1 hover:bg-white"
+    <div
+      aria-hidden
+      data-testid="hero-paper-storm"
+      className="pointer-events-none absolute inset-0 z-[24] overflow-hidden"
+    >
+      {heroPaper.map((piece) => (
+        <motion.span
+          key={piece.id}
+          className="absolute bottom-[-7%] block shadow-[2px_3px_0_rgba(0,0,0,.2)]"
+          style={{
+            left: `${piece.left}%`,
+            width: piece.size,
+            height: piece.size * 1.45,
+            backgroundColor: piece.color,
+          }}
+          animate={{
+            x: [0, piece.drift * 0.45, piece.drift, piece.drift * -0.2],
+            y: ["0vh", "-48vh", "-106vh"],
+            rotate: [piece.rotate, piece.rotate + 280, piece.rotate + 690],
+            opacity: [0, 1, 1, 0],
+          }}
+          transition={{
+            duration: piece.duration,
+            delay: piece.delay,
+            repeat: Infinity,
+            repeatDelay: 0.15 + (piece.id % 5) * 0.11,
+            ease: [0.22, 0.72, 0.26, 1],
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function CinemaDoors({ cycle }: { cycle: number }) {
+  const lines = Array.from({ length: 7 })
+  return (
+    <div
+      aria-hidden
+      data-testid="cinema-doors"
+      className="pointer-events-none absolute inset-0 z-[32] overflow-hidden"
+    >
+      <motion.div
+        key={`left-door-${cycle}`}
+        initial={{ x: "0%" }}
+        animate={{ x: "-102%" }}
+        transition={{ delay: 0.65, duration: 1.25, ease: [0.76, 0, 0.24, 1] }}
+        className="absolute inset-y-0 left-0 w-[50.5%] border-r-4 border-[#f5cb45] bg-[linear-gradient(100deg,#5f0908,#d83a2e_72%,#8a110d)] shadow-[25px_0_60px_rgba(0,0,0,.75)]"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-[#f5cb45] transition group-hover:rotate-12">
-          <Volume2 size={16} fill="currentColor" />
-        </span>
-        Whistle!
-      </button>
-      <AnimatePresence>
-        {burst > 0 && (
-          <motion.div
-            key={burst}
-            aria-hidden
-            className="pointer-events-none fixed inset-0 z-[95] overflow-hidden"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            {paper.slice(0, 22).map((piece) => (
-              <motion.span
-                key={piece.id}
-                className="absolute bottom-[8%] h-5 w-3 shadow-lg"
-                style={{ left: `${piece.left}%`, backgroundColor: piece.color }}
-                initial={{ y: 0, rotate: 0, opacity: 0 }}
-                animate={{
-                  x: piece.drift,
-                  y: [0, -300 - (piece.id % 4) * 65, -210],
-                  rotate: piece.rotate + 540,
-                  opacity: [0, 1, 1, 0],
-                }}
-                transition={{ duration: 1.8, delay: piece.delay, ease: "easeOut" }}
-              />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+        <div className="absolute inset-5 border border-[#f5cb45]/55 sm:inset-8">
+          {lines.map((_, index) => (
+            <span
+              key={index}
+              className="absolute left-[8%] right-[8%] h-px bg-[#f5cb45]/25"
+              style={{ top: `${14 + index * 12}%` }}
+            />
+          ))}
+        </div>
+        <div className="absolute right-5 top-1/2 h-16 w-5 -translate-y-1/2 rounded-full border-2 border-black bg-[#f5cb45] shadow-[3px_3px_0_#111]" />
+        <p className="absolute bottom-10 right-8 font-display text-[clamp(2.6rem,7vw,7rem)] font-black uppercase leading-[0.75] text-[#f5cb45] opacity-90">
+          First
+        </p>
+      </motion.div>
+      <motion.div
+        key={`right-door-${cycle}`}
+        initial={{ x: "0%" }}
+        animate={{ x: "102%" }}
+        transition={{ delay: 0.65, duration: 1.25, ease: [0.76, 0, 0.24, 1] }}
+        className="absolute inset-y-0 right-0 w-[50.5%] border-l-4 border-[#f5cb45] bg-[linear-gradient(260deg,#5f0908,#d83a2e_72%,#8a110d)] shadow-[-25px_0_60px_rgba(0,0,0,.75)]"
+      >
+        <div className="absolute inset-5 border border-[#f5cb45]/55 sm:inset-8">
+          {lines.map((_, index) => (
+            <span
+              key={index}
+              className="absolute left-[8%] right-[8%] h-px bg-[#f5cb45]/25"
+              style={{ top: `${14 + index * 12}%` }}
+            />
+          ))}
+        </div>
+        <div className="absolute left-5 top-1/2 h-16 w-5 -translate-y-1/2 rounded-full border-2 border-black bg-[#f5cb45] shadow-[3px_3px_0_#111]" />
+        <p className="absolute bottom-10 left-8 font-display text-[clamp(2.6rem,7vw,7rem)] font-black uppercase leading-[0.75] text-[#f5cb45] opacity-90">
+          Show
+        </p>
+      </motion.div>
+    </div>
   )
 }
 
 function Hero() {
   const { scrollYProgress } = useScroll()
   const titleY = useTransform(scrollYProgress, [0, 0.16], [0, 150])
+  const [scene, setScene] = useState(0)
+  const characterTargetX = useMotionValue(0)
+  const characterTargetRotate = useMotionValue(0)
+  const characterX = useSpring(characterTargetX, { stiffness: 95, damping: 18 })
+  const characterRotate = useSpring(characterTargetRotate, { stiffness: 95, damping: 18 })
+
+  useEffect(() => {
+    const replay = () => setScene((value) => value + 1)
+    window.addEventListener("gtheta-replay-entry", replay)
+    return () => window.removeEventListener("gtheta-replay-entry", replay)
+  }, [])
+
+  const replay = () => {
+    setScene((value) => value + 1)
+    emitSound("entry")
+  }
 
   return (
-    <section id="top" className="relative min-h-[100svh] overflow-hidden bg-black pt-[72px]">
-      <Image
-        src="/images/hero-theatre.webp"
-        alt="A cinematic parody hero entry into a cheering single-screen theatre crowd"
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover object-[58%_center]"
-      />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(6,5,3,.94)_0%,rgba(6,5,3,.68)_32%,rgba(6,5,3,.08)_65%),linear-gradient(0deg,rgba(6,5,3,.95)_0%,transparent_43%)]" />
-      <div className="hero-vignette absolute inset-0" />
-      <div className="absolute left-4 top-24 z-10 hidden rotate-[-7deg] border-2 border-[#f5cb45] px-3 py-2 text-center text-[10px] font-black uppercase tracking-[0.18em] text-[#f5cb45] md:block">
-        Parody visual
+    <section
+      id="top"
+      data-testid="interactive-hero"
+      onPointerMove={(event) => {
+        const bounds = event.currentTarget.getBoundingClientRect()
+        const ratio = (event.clientX - bounds.left) / bounds.width - 0.5
+        characterTargetX.set(ratio * 34)
+        characterTargetRotate.set(ratio * 2.2)
+      }}
+      onPointerLeave={() => {
+        characterTargetX.set(0)
+        characterTargetRotate.set(0)
+      }}
+      className="relative min-h-[100svh] overflow-hidden bg-black pt-[72px]"
+    >
+      <motion.div
+        key={`background-${scene}`}
+        initial={{ scale: 1.08 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 3.2, ease: [0.2, 0.8, 0.2, 1] }}
+        className="absolute inset-0"
+      >
+        <Image
+          src="/images/hero-theatre-empty.webp"
+          alt="A cheering single-screen theatre crowd facing an open cinematic doorway"
+          fill
+          priority
+          sizes="100vw"
+          className="hero-background-image object-cover object-[58%_center]"
+        />
+      </motion.div>
+      <div className="hero-mobile-gradient absolute inset-0 z-[5] bg-[linear-gradient(90deg,rgba(6,5,3,.94)_0%,rgba(6,5,3,.72)_31%,rgba(6,5,3,.04)_67%),linear-gradient(0deg,rgba(6,5,3,.92)_0%,transparent_46%)]" />
+      <div className="hero-vignette absolute inset-0 z-[6]" />
+
+      <motion.div
+        style={{ x: characterX, rotate: characterRotate }}
+        className="pointer-events-none absolute bottom-[-2%] left-[60%] z-[12] h-[82%] w-[min(35vw,520px)] min-w-[270px] -translate-x-1/2 origin-bottom sm:left-[58%] lg:left-[57%]"
+      >
+        <motion.div
+          key={`meher-entry-${scene}`}
+          data-testid="meher-walk-in"
+          initial={{ opacity: 0, y: 120, scale: 0.48, filter: "blur(5px)" }}
+          animate={{
+            opacity: [0, 1, 1],
+            y: [120, 42, 0],
+            scale: [0.48, 0.74, 1],
+            filter: ["blur(5px)", "blur(1px)", "blur(0px)"],
+          }}
+          transition={{ delay: 0.95, duration: 2.15, ease: [0.16, 1, 0.3, 1] }}
+          className="relative h-full w-full origin-bottom drop-shadow-[0_30px_28px_rgba(0,0,0,.65)]"
+        >
+          <Image
+            src="/images/meher-walk.webp"
+            alt="A photorealistic parody portrait of Meher Ramesh walking into the theatre"
+            fill
+            priority
+            sizes="(max-width: 640px) 270px, 35vw"
+            className="object-contain object-bottom"
+          />
+        </motion.div>
+      </motion.div>
+
+      <HeroPaperStorm />
+      <CinemaDoors cycle={scene} />
+
+      <motion.div
+        key={`parody-label-${scene}`}
+        initial={{ opacity: 0, rotate: -7, scale: 0.8 }}
+        animate={{ opacity: 1, rotate: -7, scale: 1 }}
+        transition={{ delay: 1.75, type: "spring" }}
+        className="absolute left-4 top-24 z-[25] hidden border-2 border-[#f5cb45] px-3 py-2 text-center text-[10px] font-black uppercase tracking-[0.18em] text-[#f5cb45] md:block"
+      >
+        Interactive entry
         <br />
         front bench cut
-      </div>
+      </motion.div>
 
-      <div className="relative z-10 mx-auto flex min-h-[calc(100svh-72px)] max-w-[1600px] flex-col justify-between px-5 pb-8 pt-28 sm:px-8 sm:pt-12 lg:px-14 lg:pb-10 lg:pt-16">
-        <motion.div className="max-w-3xl" style={{ y: titleY }}>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-5 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.28em] text-[#f5cb45]"
-          >
+      <div className="relative z-[20] mx-auto flex min-h-[calc(100svh-72px)] max-w-[1600px] flex-col justify-between px-5 pb-8 pt-28 sm:px-8 sm:pt-12 lg:px-14 lg:pb-10 lg:pt-16">
+        <motion.div
+          key={`hero-copy-${scene}`}
+          initial={{ opacity: 0, x: -34 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.72, duration: 0.75 }}
+          className="max-w-3xl"
+          style={{ y: titleY }}
+        >
+          <div className="mb-5 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.28em] text-[#f5cb45]">
             <span className="h-px w-10 bg-[#f5cb45]" />
             Hyderabad · Drop 01 · 2026
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.08, ease: [0.2, 0.8, 0.2, 1] }}
-            className="max-w-[48rem] font-display text-[clamp(3.5rem,10vw,8.5rem)] font-black uppercase leading-[0.72] tracking-[-0.065em]"
-          >
+          </div>
+          <h1 className="max-w-[48rem] font-display text-[clamp(3.5rem,10vw,8.5rem)] font-black uppercase leading-[0.72] tracking-[-0.065em]">
             Meme
             <span className="hero-stroke block">Material.</span>
-          </motion.h1>
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.25 }}
-            className="mt-7 max-w-xl border-l-4 border-[#d83a2e] pl-4"
-          >
+          </h1>
+          <div className="mt-7 max-w-xl border-l-4 border-[#d83a2e] pl-4">
             <p className="font-display text-xl font-black uppercase leading-tight text-[#f5cb45] sm:text-2xl">
               Your reaction. Your hoodie.
             </p>
@@ -505,10 +656,16 @@ function Hero() {
               Telugu internet culture, cut in heavyweight cotton. Built for the first-day,
               first-show person in you.
             </p>
-          </motion.div>
+          </div>
         </motion.div>
 
-        <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
+        <motion.div
+          key={`hero-actions-${scene}`}
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.9, duration: 0.7 }}
+          className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end"
+        >
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => scrollToId("#drop")}
@@ -516,7 +673,16 @@ function Hero() {
             >
               Shop the drop <ArrowDown size={17} />
             </button>
-            <WhistleButton />
+            <button
+              data-testid="replay-entry"
+              onClick={replay}
+              className="group flex items-center gap-3 rounded-full bg-[#f5cb45] px-6 py-3.5 text-sm font-black uppercase tracking-[0.14em] text-black transition hover:-translate-y-1 hover:bg-white"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-[#f5cb45] transition group-hover:rotate-12">
+                <Play size={15} fill="currentColor" />
+              </span>
+              Replay entry
+            </button>
           </div>
           <div className="max-w-xs text-left sm:text-right">
             <div className="mb-2 flex items-center gap-1 sm:justify-end">
@@ -525,10 +691,13 @@ function Hero() {
               ))}
             </div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/75">
-              Crowd rating: papers went flying
+              Crowd rating: papers never stop flying
+            </p>
+            <p className="mt-2 text-[9px] font-black uppercase tracking-[0.18em] text-[#f5cb45]">
+              Enable sound once for the automatic entry whistle
             </p>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   )
@@ -753,7 +922,6 @@ function ChiruApproval() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ type: "spring", delay: 0.55 + index * 0.14 }}
-              animate={{ y: [0, -8, 0] }}
               className={`absolute z-10 rounded-full border-2 border-black px-4 py-2 text-xs font-black uppercase tracking-[0.15em] shadow-[4px_4px_0_#111] ${position}`}
             >
               {label}

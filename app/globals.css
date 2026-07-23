@@ -176,11 +176,11 @@ html.lenis body {
 }
 
 @media (max-width: 640px) {
-  #top > img {
-    object-position: 66% center;
+  .hero-background-image {
+    object-position: 58% center;
   }
 
-  #top > div:first-of-type {
+  .hero-mobile-gradient {
     background:
       linear-gradient(90deg, rgba(6, 5, 3, 0.9) 0%, rgba(6, 5, 3, 0.46) 58%, transparent 100%),
       linear-gradient(0deg, rgba(6, 5, 3, 0.96) 0%, rgba(6, 5, 3, 0.1) 60%);
