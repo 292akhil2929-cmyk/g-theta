@@ -18,7 +18,6 @@ import {
   Music2,
   Play,
   ShoppingBag,
-  Sparkles,
   Star,
   Ticket,
   Volume2,
@@ -92,8 +91,7 @@ const marquee = [
   "FULL THEATRE ENERGY",
 ]
 
-const ADARAKU_PREVIEW =
-  "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/fb/6f/ef/fb6fef73-d955-fd05-6f77-5e22bfbf5378/mzaf_11368965629338069892.plus.aac.p.m4a"
+const ADARAKU_ENTRY_AUDIO = "/audio/adaraku-entry.mp3"
 
 function emitSound(name: "laugh" | "sting" | "cheer" | "whoosh" | "entry") {
   window.dispatchEvent(new CustomEvent("gtheta-sound", { detail: name }))
@@ -319,9 +317,8 @@ function SoundController() {
       <audio
         ref={entryAudioRef}
         data-testid="entry-audio"
-        src={ADARAKU_PREVIEW}
+        src={ADARAKU_ENTRY_AUDIO}
         preload="auto"
-        crossOrigin="anonymous"
       />
       <button
         data-testid="sound-toggle"
@@ -341,9 +338,8 @@ function SiteNav() {
   const [open, setOpen] = useState(false)
   const links = [
     ["#drop", "Drop 01"],
-    ["#lookbook", "Lookbook"],
-    ["#memes", "Boss says"],
     ["#laugh", "Laugh"],
+    ["#memes", "Boss says"],
     ["#quality", "Quality"],
   ] as const
 
@@ -670,7 +666,7 @@ function Hero() {
               Crowd rating: papers never stop flying
             </p>
             <p className="mt-2 text-[9px] font-black uppercase tracking-[0.18em] text-[#f5cb45]">
-              Adaraku 30-second preview via Apple Music
+              Adaraku remix · starts at 00:20 · one play
             </p>
           </div>
         </motion.div>
@@ -815,49 +811,6 @@ function DropSection() {
   )
 }
 
-function Lookbook() {
-  return (
-    <section id="lookbook" className="scroll-mt-16 bg-[#f5cb45] px-3 py-10 sm:px-6">
-      <div className="relative mx-auto min-h-[74svh] max-w-[1580px] overflow-hidden rounded-[2rem] border-2 border-black shadow-[8px_8px_0_#d83a2e]">
-        <Image
-          src="/images/lookbook.webp"
-          alt="Four South Indian models in red, cream, black, and yellow oversized hoodies"
-          fill
-          sizes="(max-width: 1600px) 100vw, 1600px"
-          className="object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/5 to-black/25" />
-        <motion.div
-          className="absolute right-5 top-5 z-10 rotate-6 rounded-full border-2 border-black bg-[#ff3e91] px-5 py-3 font-display text-xl font-black uppercase text-black shadow-[4px_4px_0_#f5cb45]"
-          animate={{ rotate: [6, -3, 6], scale: [1, 1.08, 1] }}
-          transition={{ duration: 2.4, repeat: Infinity }}
-        >
-          Wear the reaction
-        </motion.div>
-        <div className="absolute inset-x-0 bottom-0 z-10 grid gap-6 p-6 sm:p-9 lg:grid-cols-[1fr_auto] lg:items-end lg:p-12">
-          <div>
-            <p className="eyebrow">Front bench uniform</p>
-            <h2 className="mt-3 max-w-4xl font-display text-[clamp(3.2rem,8vw,8rem)] font-black uppercase leading-[0.78] tracking-[-0.055em]">
-              Outside silent.
-              <span className="block text-[#f5cb45]">Inside theatre.</span>
-            </h2>
-          </div>
-          <div className="max-w-sm rounded-2xl border-2 border-white bg-black/70 p-5 backdrop-blur-xl">
-            <div className="flex items-center gap-2 text-[#f5cb45]">
-              <Sparkles size={16} />
-              <span className="text-[10px] font-black uppercase tracking-[0.22em]">The fit</span>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-white/75">
-              Drop shoulder. Boxy torso. Heavy rib. Soft inside. Built to survive interval samosas,
-              late-night rides and unsolicited movie reviews.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 function ChiruApproval() {
   return (
     <section id="memes" className="scroll-mt-20 bg-[#fff4da] px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
@@ -948,7 +901,7 @@ function AlluLaughSection() {
     target: sectionRef,
     offset: ["start end", "end start"],
   })
-  const imageRotate = useTransform(scrollYProgress, [0, 0.5, 1], [-4, 1, 4])
+  const imageRotate = useTransform(scrollYProgress, [0, 0.5, 1], [-8, -5, -3])
 
   const laugh = () => {
     setBurst((value) => value + 1)
@@ -991,45 +944,51 @@ function AlluLaughSection() {
         >
           <div
             data-testid="allu-meme-frame"
-            className="relative aspect-video overflow-hidden rounded-[2rem] border-2 border-black bg-[#d83a2e] shadow-[12px_14px_0_#1667ff]"
+            className="relative aspect-video overflow-visible rounded-[2rem] border-2 border-black bg-[#d83a2e] shadow-[12px_14px_0_#1667ff]"
           >
-            <Image
-              src="/images/allu-laugh-meme.png"
-              alt="Allu Arjun laughing openly at an audience event"
-              fill
-              sizes="(max-width: 1024px) 100vw, 60vw"
-              className="object-cover object-center"
-            />
+            <div className="absolute inset-0 overflow-hidden rounded-[1.85rem]">
+              <motion.div
+                className="absolute inset-[-2%]"
+                animate={{ y: [0, -9, 0, 7, 0], scale: [1.02, 1.035, 1.02] }}
+                transition={{ duration: 2.15, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Image
+                  src="/images/allu-laugh-meme.png"
+                  alt="Allu Arjun laughing openly at an audience event"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 60vw"
+                  className="object-cover object-center"
+                />
+              </motion.div>
+            </div>
             <div
               aria-hidden
               data-testid="mouth-laugh-words"
-              className="pointer-events-none absolute left-[53%] top-[52%] z-10"
+              className="pointer-events-none absolute left-[54%] top-[51%] z-20"
             >
-              {["HA!", "HAHA!", "HAHAHA!"].map((word, index) => (
+              {[0].map((index) => (
                 <motion.span
-                  key={word}
-                  className="absolute left-0 top-0 whitespace-nowrap font-display text-[clamp(1.25rem,3.6vw,3.4rem)] font-black uppercase leading-none tracking-[-0.06em] text-[#f5cb45]"
+                  key={index}
+                  className="absolute left-0 top-0 whitespace-nowrap font-display text-[clamp(3.4rem,8vw,7rem)] font-black uppercase leading-[0.72] tracking-[-0.08em] text-[#d83a2e]"
                   style={{
-                    WebkitTextStroke: "2px #11100d",
-                    textShadow: "4px 4px 0 #d83a2e",
+                    textShadow: "4px 4px 0 #11100d",
                   }}
-                  initial={{ x: 0, y: 0, opacity: 0, scale: 0.2, rotate: -8 }}
+                  initial={{ x: 0, y: 0, opacity: 0, scale: 0.08, rotate: -8 }}
                   animate={{
-                    x: [0, 48 + index * 42, 92 + index * 64],
-                    y: [0, -24 - index * 32, -62 - index * 48],
+                    x: [0, -75, -210],
+                    y: [0, -48, -130],
                     opacity: [0, 1, 1, 0],
-                    scale: [0.2, 0.9, 1.16, 1.25],
-                    rotate: [-8, index * 4, index * 7],
+                    scale: [0.08, 0.5, 0.9, 1.1],
+                    rotate: [-8, -4, -1],
                   }}
                   transition={{
-                    duration: 1.75,
-                    delay: index * 0.38,
+                    duration: 2.35,
                     repeat: Infinity,
-                    repeatDelay: 1.05,
+                    repeatDelay: 1.2,
                     ease: [0.2, 0.8, 0.2, 1],
                   }}
                 >
-                  {word}
+                  HAHAHA
                 </motion.span>
               ))}
             </div>
@@ -1301,9 +1260,8 @@ export function TeluguStorefront() {
         <Hero />
         <TheatreMarquee />
         <DropSection />
-        <Lookbook />
-        <ChiruApproval />
         <AlluLaughSection />
+        <ChiruApproval />
         <MemeHall />
         <Quality />
       </main>
