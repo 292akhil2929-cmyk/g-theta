@@ -69,7 +69,7 @@ const paper = Array.from({ length: 28 }, (_, index) => ({
   delay: (index % 8) * 0.08,
   rotate: (index * 53) % 180,
   drift: (index % 2 === 0 ? 1 : -1) * (25 + (index % 5) * 14),
-  color: ["#fff4da", "#f5cb45", "#ff3e91", "#1667ff", "#d83a2e"][index % 5],
+  color: ["#d83a2e", "#f5cb45", "#ff3e91", "#1667ff", "#78d63d"][index % 5],
 }))
 
 const heroPaper = Array.from({ length: 52 }, (_, index) => ({
@@ -80,7 +80,7 @@ const heroPaper = Array.from({ length: 52 }, (_, index) => ({
   drift: (index % 2 ? 1 : -1) * (35 + (index % 7) * 17),
   rotate: (index * 71) % 240,
   size: 8 + (index % 4) * 4,
-  color: ["#fff4da", "#ffffff", "#f5cb45", "#ff3e91"][index % 4],
+  color: ["#d83a2e", "#f5cb45", "#1667ff", "#ff3e91"][index % 4],
 }))
 
 const marquee = [
@@ -92,7 +92,7 @@ const marquee = [
   "FULL THEATRE ENERGY",
 ]
 
-function emitSound(name: "laugh" | "sting" | "cheer" | "whoosh" | "entry") {
+function emitSound(name: "laugh" | "sting" | "cheer" | "whoosh") {
   window.dispatchEvent(new CustomEvent("gtheta-sound", { detail: name }))
 }
 
@@ -206,55 +206,6 @@ function SoundController() {
       const name = (event as CustomEvent<string>).detail
       const now = context.currentTime
 
-      if (name === "entry") {
-        const notes = [
-          [1047, 0, 0.22],
-          [1397, 0.24, 0.18],
-          [1760, 0.44, 0.32],
-          [1480, 0.8, 0.2],
-          [2093, 1.04, 0.48],
-        ] as const
-
-        notes.forEach(([frequency, delay, duration], index) => {
-          const whistle = context.createOscillator()
-          const overtone = context.createOscillator()
-          const gain = context.createGain()
-          const overtoneGain = context.createGain()
-          whistle.type = "sine"
-          overtone.type = "sine"
-          whistle.frequency.setValueAtTime(frequency, now + delay)
-          whistle.frequency.exponentialRampToValueAtTime(
-            frequency * (index % 2 ? 0.96 : 1.035),
-            now + delay + duration,
-          )
-          overtone.frequency.setValueAtTime(frequency * 2.02, now + delay)
-          gain.gain.setValueAtTime(0.0001, now + delay)
-          gain.gain.exponentialRampToValueAtTime(0.115, now + delay + 0.025)
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + duration)
-          overtoneGain.gain.setValueAtTime(0.0001, now + delay)
-          overtoneGain.gain.exponentialRampToValueAtTime(0.018, now + delay + 0.02)
-          overtoneGain.gain.exponentialRampToValueAtTime(0.0001, now + delay + duration)
-          whistle.connect(gain).connect(context.destination)
-          overtone.connect(overtoneGain).connect(context.destination)
-          whistle.start(now + delay)
-          overtone.start(now + delay)
-          whistle.stop(now + delay + duration + 0.02)
-          overtone.stop(now + delay + duration + 0.02)
-        })
-
-        const thump = context.createOscillator()
-        const thumpGain = context.createGain()
-        thump.type = "sine"
-        thump.frequency.setValueAtTime(94, now)
-        thump.frequency.exponentialRampToValueAtTime(42, now + 0.5)
-        thumpGain.gain.setValueAtTime(0.16, now)
-        thumpGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55)
-        thump.connect(thumpGain).connect(context.destination)
-        thump.start()
-        thump.stop(now + 0.58)
-        return
-      }
-
       if (name === "laugh") {
         ;[0, 0.11, 0.23, 0.36].forEach((delay, index) => {
           const oscillator = context.createOscillator()
@@ -342,7 +293,6 @@ function SoundController() {
       setEnabled(true)
       window.setTimeout(() => {
         window.dispatchEvent(new Event("gtheta-replay-entry"))
-        emitSound("entry")
       }, 60)
     } catch {}
   }
@@ -550,7 +500,6 @@ function Hero() {
 
   const replay = () => {
     setScene((value) => value + 1)
-    emitSound("entry")
   }
 
   return (
@@ -607,7 +556,7 @@ function Hero() {
         >
           <Image
             src="/images/meher-walk.webp"
-            alt="A photorealistic parody portrait of Meher Ramesh walking into the theatre"
+            alt="Meher Ramesh walking into the theatre in a black suit with a prop handgun held down"
             fill
             priority
             sizes="(max-width: 640px) 270px, 35vw"
@@ -694,7 +643,7 @@ function Hero() {
               Crowd rating: papers never stop flying
             </p>
             <p className="mt-2 text-[9px] font-black uppercase tracking-[0.18em] text-[#f5cb45]">
-              Enable sound once for the automatic entry whistle
+              Doors and crowd run automatically
             </p>
           </div>
         </motion.div>
