@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   AnimatePresence,
   motion,
@@ -26,40 +26,9 @@ import {
   Zap,
 } from "lucide-react"
 import { useCart } from "@/components/cart-context"
-import { HoodieSvg } from "@/components/hoodie-svg"
 import { Logo } from "@/components/logo"
 import { scrollToId } from "@/components/smooth-scroll"
 import { products, SIZES, type Product } from "@/lib/products"
-
-const dropCopy: Record<
-  string,
-  { line: string; ink: string; badge: string; edition: string }
-> = {
-  "gt-baavundi": {
-    line: "BAAVUNDI.",
-    ink: "#f5cb45",
-    badge: "Boss approved",
-    edition: "01 / 100",
-  },
-  "gt-manakenduku": {
-    line: "MANAKENDUKU?",
-    ink: "#f3ead9",
-    badge: "Peace department",
-    edition: "02 / 100",
-  },
-  "gt-anthega": {
-    line: "ANTHE GA.",
-    ink: "#d83a2e",
-    badge: "Logic final",
-    edition: "03 / 100",
-  },
-  "gt-ayyayyo": {
-    line: "AYYAYYO.",
-    ink: "#11100d",
-    badge: "Instant reaction",
-    edition: "04 / 100",
-  },
-}
 
 const paper = Array.from({ length: 28 }, (_, index) => ({
   id: index,
@@ -191,15 +160,71 @@ function ScrollFunLayer() {
 }
 
 function SoundController() {
-  const [enabled, setEnabled] = useState(false)
+  const [enabled, setEnabled] = useState(true)
   const contextRef = useRef<AudioContext | null>(null)
   const humRef = useRef<OscillatorNode | null>(null)
   const entryAudioRef = useRef<HTMLAudioElement | null>(null)
-  const enabledRef = useRef(false)
+  const enabledRef = useRef(true)
+
+  const startAudioEngine = useCallback((restartTrack: boolean) => {
+    if (!enabledRef.current) return
+
+    try {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+
+      if (AudioCtx && !contextRef.current) {
+        const context = new AudioCtx()
+        const hum = context.createOscillator()
+        const gain = context.createGain()
+        const filter = context.createBiquadFilter()
+        hum.type = "sawtooth"
+        hum.frequency.value = 54
+        filter.type = "lowpass"
+        filter.frequency.value = 120
+        gain.gain.value = 0.012
+        hum.connect(filter).connect(gain).connect(context.destination)
+        hum.start()
+        contextRef.current = context
+        humRef.current = hum
+      }
+
+      if (contextRef.current?.state === "suspended") {
+        void contextRef.current.resume()
+      }
+
+      const entryAudio = entryAudioRef.current
+      if (entryAudio) {
+        if (restartTrack) entryAudio.currentTime = 0
+        void entryAudio.play().catch(() => {})
+      }
+    } catch {}
+  }, [])
 
   useEffect(() => {
     enabledRef.current = enabled
   }, [enabled])
+
+  useEffect(() => {
+    const entryAudio = entryAudioRef.current
+    if (entryAudio) {
+      entryAudio.currentTime = 0
+      void entryAudio.play().catch(() => {})
+    }
+
+    const unlockDefaultSound = () => {
+      if (!enabledRef.current) return
+      startAudioEngine(false)
+    }
+
+    window.addEventListener("pointerdown", unlockDefaultSound, { once: true, capture: true })
+    window.addEventListener("keydown", unlockDefaultSound, { once: true, capture: true })
+    return () => {
+      window.removeEventListener("pointerdown", unlockDefaultSound, { capture: true })
+      window.removeEventListener("keydown", unlockDefaultSound, { capture: true })
+    }
+  }, [startAudioEngine])
 
   useEffect(() => {
     const play = (event: Event) => {
@@ -279,37 +304,15 @@ function SoundController() {
       humRef.current = null
       void contextRef.current?.close()
       contextRef.current = null
+      enabledRef.current = false
       setEnabled(false)
       return
     }
 
-    try {
-      const AudioCtx =
-        window.AudioContext ||
-        (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-      if (!AudioCtx) return
-      const context = new AudioCtx()
-      const hum = context.createOscillator()
-      const gain = context.createGain()
-      const filter = context.createBiquadFilter()
-      hum.type = "sawtooth"
-      hum.frequency.value = 54
-      filter.type = "lowpass"
-      filter.frequency.value = 120
-      gain.gain.value = 0.012
-      hum.connect(filter).connect(gain).connect(context.destination)
-      hum.start()
-      contextRef.current = context
-      humRef.current = hum
-      enabledRef.current = true
-      setEnabled(true)
-      const entryAudio = entryAudioRef.current
-      if (entryAudio) {
-        entryAudio.currentTime = 0
-        void entryAudio.play().catch(() => {})
-      }
-      window.dispatchEvent(new Event("gtheta-replay-entry"))
-    } catch {}
+    enabledRef.current = true
+    setEnabled(true)
+    startAudioEngine(true)
+    window.dispatchEvent(new Event("gtheta-replay-entry"))
   }
 
   return (
@@ -319,6 +322,8 @@ function SoundController() {
         data-testid="entry-audio"
         src={ADARAKU_ENTRY_AUDIO}
         preload="auto"
+        autoPlay
+        playsInline
       />
       <button
         data-testid="sound-toggle"
@@ -696,46 +701,63 @@ function TheatreMarquee() {
 function ProductCard({ product, index }: { product: Product; index: number }) {
   const { addItem } = useCart()
   const [size, setSize] = useState("L")
-  const copy = dropCopy[product.id]
+  const [photo, setPhoto] = useState(0)
+  const images = product.images ?? []
+  const currentImage = images[photo] ?? "/images/products/supplied-01.jpeg"
   const colors = ["#fff4da", "#f5cb45", "#ff8abb", "#74a7ff"]
 
   return (
     <motion.article
+      data-testid="product-card"
+      data-product-id={product.id}
       initial={{ opacity: 0, y: 70, rotate: index % 2 ? 2 : -2 }}
       whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-      whileHover={{ y: -12, rotate: index % 2 ? -1 : 1 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.65, delay: (index % 2) * 0.08 }}
-      className="group overflow-hidden rounded-[1.75rem] border-2 border-black text-black shadow-[7px_8px_0_#11100d]"
+      className="group overflow-hidden rounded-[1.75rem] border-2 border-black text-black shadow-[7px_8px_0_#11100d] transition-shadow duration-300 hover:shadow-[11px_13px_0_#11100d]"
       style={{ backgroundColor: colors[index % colors.length] }}
     >
-      <div className="relative aspect-[4/4.7] overflow-hidden bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,.75),transparent_52%)]">
+      <div className="relative aspect-[4/4.7] overflow-hidden bg-[#eee7db]">
         <span className="absolute left-5 top-5 z-10 rounded-full border-2 border-black bg-white px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em]">
-          {copy.badge}
+          {product.badge ?? "New drop"}
         </span>
-        <span className="absolute right-5 top-5 z-10 font-mono text-[10px] text-black/55">
-          {copy.edition}
+        <span className="absolute right-5 top-5 z-10 rounded-full bg-black/70 px-2.5 py-1 font-mono text-[9px] text-white backdrop-blur">
+          DROP 01 / {String(index + 1).padStart(2, "0")}
         </span>
-        <motion.div
-          className="absolute inset-x-[14%] bottom-[5%] top-[8%]"
-          whileHover={{ scale: 1.06, rotate: index % 2 ? 1.2 : -1.2 }}
-          transition={{ type: "spring", stiffness: 220, damping: 18 }}
-        >
-          <HoodieSvg
-            colorFrom={product.colorFrom}
-            colorTo={product.colorTo}
-            className="h-full w-full drop-shadow-[0_28px_28px_rgba(0,0,0,.35)]"
-          />
-          <div
-            className="pointer-events-none absolute left-1/2 top-[43%] w-[44%] -translate-x-1/2 -rotate-2 text-center"
-            style={{ color: copy.ink }}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={currentImage}
+            initial={{ opacity: 0, scale: 1.04 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.35 }}
+            className="absolute inset-0"
           >
-            <p className="font-display text-[clamp(.8rem,2.2vw,1.65rem)] font-black uppercase leading-none tracking-[-0.04em]">
-              {copy.line}
-            </p>
+            <Image
+              src={currentImage}
+              alt={`${product.name} — supplied product photograph ${photo + 1}`}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+              className="object-contain p-2 transition duration-700 group-hover:scale-[1.025]"
+            />
+          </motion.div>
+        </AnimatePresence>
+        {images.length > 1 && (
+          <div className="absolute bottom-5 right-5 z-20 flex gap-2 rounded-full border-2 border-black bg-white/90 p-1.5 shadow-[3px_3px_0_#111]">
+            {images.map((image, imageIndex) => (
+              <button
+                key={image}
+                onPointerDown={() => setPhoto(imageIndex)}
+                onClick={() => setPhoto(imageIndex)}
+                aria-label={`Show ${product.name} photo ${imageIndex + 1}`}
+                className={`h-2.5 w-2.5 rounded-full border border-black transition ${
+                  photo === imageIndex ? "bg-[#d83a2e]" : "bg-[#f5cb45]"
+                }`}
+              />
+            ))}
           </div>
-        </motion.div>
-        <span className="absolute bottom-5 left-5 rounded-full border-2 border-black bg-white px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em]">
+        )}
+        <span className="absolute bottom-5 left-5 z-10 rounded-full border-2 border-black bg-white px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em]">
           480 GSM
         </span>
       </div>
@@ -794,17 +816,17 @@ function DropSection() {
               Now playing · Drop 01
             </p>
             <h2 className="mt-4 max-w-5xl font-display text-[clamp(3.5rem,9vw,8.5rem)] font-black uppercase leading-[0.78] tracking-[-0.055em]">
-              Four moods.
-              <span className="block text-white">Zero context.</span>
+              Fifteen drops.
+              <span className="block text-white">Zero placeholders.</span>
             </h2>
           </div>
           <p className="max-w-lg text-base font-semibold leading-7 text-white/80 lg:justify-self-end">
-            Not screenshots pasted on cloth. Each line is rebuilt as wearable typography, screen
-            printed on dense 480 GSM brushed cotton with an oversized Hyderabad fit.
+            Every card uses the supplied hoodie photography, including alternate on-body views.
+            Dense 480 GSM cotton, oversized Hyderabad fit, and absolutely no generic mockups.
           </p>
         </div>
         <div className="mt-10 grid gap-7 md:grid-cols-2 xl:grid-cols-4">
-          {products.slice(0, 4).map((product, index) => (
+          {products.map((product, index) => (
             <ProductCard key={product.id} product={product} index={index} />
           ))}
         </div>

@@ -5,6 +5,8 @@ export type Product = {
   price: number
   colorFrom: string
   colorTo: string
+  images?: string[]
+  badge?: string
   sizes: string[]
   specs: { weight: string; fabric: string; fit: string }
 }
@@ -17,67 +19,139 @@ const specs = {
   fit: "Oversized / drop shoulder",
 }
 
+const product = (
+  id: string,
+  name: string,
+  code: string,
+  images: string[],
+  badge: string,
+  price = 3499
+): Product => ({
+  id,
+  name,
+  code,
+  price,
+  colorFrom: "#303132",
+  colorTo: "#111213",
+  images,
+  badge,
+  sizes: SIZES,
+  specs,
+})
+
 export const products: Product[] = [
-  {
-    id: "gt-baavundi",
-    name: "Baavundi Hoodie",
-    code: "GΘ-001",
-    price: 3499,
-    colorFrom: "#20252b",
-    colorTo: "#070809",
-    sizes: SIZES,
-    specs,
-  },
-  {
-    id: "gt-manakenduku",
-    name: "Manakenduku Hoodie",
-    code: "GΘ-002",
-    price: 3299,
-    colorFrom: "#dd4134",
-    colorTo: "#77150f",
-    sizes: SIZES,
-    specs,
-  },
-  {
-    id: "gt-anthega",
-    name: "Anthe Ga Hoodie",
-    code: "GΘ-003",
-    price: 3299,
-    colorFrom: "#eee4d3",
-    colorTo: "#9c8c73",
-    sizes: SIZES,
-    specs,
-  },
-  {
-    id: "gt-ayyayyo",
-    name: "Ayyayyo Hoodie",
-    code: "GΘ-004",
-    price: 3299,
-    colorFrom: "#f5cb45",
-    colorTo: "#b77a0b",
-    sizes: SIZES,
-    specs,
-  },
-  {
-    id: "gt-sideeye",
-    name: "Side Eye Hoodie",
-    code: "GΘ-005",
-    price: 3499,
-    colorFrom: "#747d45",
-    colorTo: "#30351c",
-    sizes: SIZES,
-    specs,
-  },
-  {
-    id: "gt-interval",
-    name: "Interval Block Hoodie",
-    code: "GΘ-006",
-    price: 3699,
-    colorFrom: "#7a1e20",
-    colorTo: "#260809",
-    sizes: SIZES,
-    specs,
-  },
+  product(
+    "gt-harbour-hook",
+    "Harbour Hook Hoodie",
+    "GTH-001",
+    ["/images/products/supplied-01.jpeg"],
+    "Harbour cut"
+  ),
+  product(
+    "gt-sudden-star",
+    "Sudden Star Hoodie",
+    "GTH-002",
+    ["/images/products/supplied-02.jpeg", "/images/products/supplied-04.jpeg"],
+    "Double feature"
+  ),
+  product(
+    "gt-baavundi",
+    "Baavundi Hoodie",
+    "GTH-003",
+    ["/images/products/supplied-03.jpeg"],
+    "Boss approved"
+  ),
+  product(
+    "gt-alaa-kadhu-raa",
+    "Alaa Kadhu Raa Hoodie",
+    "GTH-004",
+    ["/images/products/supplied-05.jpeg"],
+    "Instant reaction",
+    3299
+  ),
+  product(
+    "gt-roundtable",
+    "Roundtable Hoodie",
+    "GTH-005",
+    ["/images/products/supplied-06.jpeg"],
+    "Cult classic",
+    3299
+  ),
+  product(
+    "gt-squad-goals",
+    "Squad Goals Hoodie",
+    "GTH-006",
+    ["/images/products/supplied-07.jpeg"],
+    "Full cast"
+  ),
+  product(
+    "gt-bomb-kumar",
+    "Bomb Kumar Hoodie",
+    "GTH-007",
+    ["/images/products/supplied-08.jpeg"],
+    "Interval block"
+  ),
+  product(
+    "gt-nenu-ikkade",
+    "Nenu Ikkade Hoodie",
+    "GTH-008",
+    ["/images/products/supplied-17.jpeg", "/images/products/supplied-09.jpeg"],
+    "Double feature"
+  ),
+  product(
+    "gt-zoonior",
+    "Zoonior Hoodie",
+    "GTH-009",
+    ["/images/products/supplied-10.jpeg"],
+    "Deep cut",
+    3299
+  ),
+  product(
+    "gt-egga",
+    "Egga Hoodie",
+    "GTH-010",
+    ["/images/products/supplied-11.jpeg"],
+    "Graphic special",
+    3699
+  ),
+  product(
+    "gt-pulkaa",
+    "Pulkaa Hoodie",
+    "GTH-011",
+    ["/images/products/supplied-12.jpeg"],
+    "Meme legend"
+  ),
+  product(
+    "gt-godfatherly",
+    "Stares Godfatherly Hoodie",
+    "GTH-012",
+    ["/images/products/supplied-13.jpeg"],
+    "Boss energy"
+  ),
+  product(
+    "gt-ayya-namaskaram",
+    "Ayya Namaskaram Hoodie",
+    "GTH-013",
+    ["/images/products/supplied-14.jpeg"],
+    "Front bench",
+    3299
+  ),
+  product(
+    "gt-mahesu",
+    "Mahesu Hoodie",
+    "GTH-014",
+    ["/images/products/supplied-15.jpeg"],
+    "Hero cut",
+    3699
+  ),
+  product(
+    "gt-baba-saab",
+    "Baba Saab Hoodie",
+    "GTH-015",
+    ["/images/products/supplied-16.jpeg"],
+    "Collector print",
+    3699
+  ),
 ]
 
 export type Colorway = {
@@ -99,10 +173,11 @@ export function colorwayToProduct(c: Colorway, price = 3499): Product {
   return {
     id: `gt-hoodie-${c.name.toLowerCase()}`,
     name: `G Theta Hoodie — ${c.name}`,
-    code: "GΘ-X",
+    code: "GTH-X",
     price,
     colorFrom: c.colorFrom,
     colorTo: c.colorTo,
+    badge: "Custom cut",
     sizes: SIZES,
     specs,
   }
