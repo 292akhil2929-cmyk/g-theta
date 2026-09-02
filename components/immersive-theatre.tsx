@@ -38,8 +38,85 @@ const ROOMS = [
 ] as const
 
 const PAPER_COLORS = ["#ef3b2f", "#f6d443", "#256df5", "#fa2f91", "#f7efe0", "#71cf35"]
+const FORECOURT_ATLASES = [
+  "/images/360/forecourt-sequence/forecourt-atlas-1.webp",
+  "/images/360/forecourt-sequence/forecourt-atlas-2.webp",
+  "/images/360/forecourt-sequence/forecourt-atlas-3.webp",
+] as const
+const FORECOURT_FRAME_COUNT = 60
+const FORECOURT_FRAMES_PER_ATLAS = 20
+const FORECOURT_COLUMNS = 5
+const FORECOURT_CELL_WIDTH = 640
+const FORECOURT_CELL_HEIGHT = 360
 
 type Look = { yaw: number; pitch: number; fov: number }
+
+function ForecourtSequence({ frame }: { frame: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const images = useRef<HTMLImageElement[]>([])
+  const [loaded, setLoaded] = useState(0)
+
+  useEffect(() => {
+    images.current = FORECOURT_ATLASES.map((source) => {
+      const image = new window.Image()
+      image.decoding = "async"
+      image.onload = () => setLoaded((count) => count + 1)
+      image.src = source
+      return image
+    })
+  }, [])
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const draw = () => {
+      const rect = canvas.getBoundingClientRect()
+      if (!rect.width || !rect.height) return
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.6)
+      const width = Math.round(rect.width * dpr)
+      const height = Math.round(rect.height * dpr)
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width
+        canvas.height = height
+      }
+
+      const normalized = ((frame % FORECOURT_FRAME_COUNT) + FORECOURT_FRAME_COUNT) % FORECOURT_FRAME_COUNT
+      const atlasIndex = Math.floor(normalized / FORECOURT_FRAMES_PER_ATLAS)
+      const slot = normalized % FORECOURT_FRAMES_PER_ATLAS
+      const image = images.current[atlasIndex]
+      if (!image?.complete || !image.naturalWidth) return
+
+      const sourceX = (slot % FORECOURT_COLUMNS) * FORECOURT_CELL_WIDTH
+      const sourceY = Math.floor(slot / FORECOURT_COLUMNS) * FORECOURT_CELL_HEIGHT
+      const sourceRatio = FORECOURT_CELL_WIDTH / FORECOURT_CELL_HEIGHT
+      const targetRatio = width / height
+      let cropX = sourceX
+      let cropY = sourceY
+      let cropWidth = FORECOURT_CELL_WIDTH
+      let cropHeight = FORECOURT_CELL_HEIGHT
+
+      if (targetRatio > sourceRatio) {
+        cropHeight = FORECOURT_CELL_WIDTH / targetRatio
+        cropY += (FORECOURT_CELL_HEIGHT - cropHeight) / 2
+      } else {
+        cropWidth = FORECOURT_CELL_HEIGHT * targetRatio
+        cropX += (FORECOURT_CELL_WIDTH - cropWidth) / 2
+      }
+
+      const context = canvas.getContext("2d", { alpha: false })
+      if (!context) return
+      context.drawImage(image, cropX, cropY, cropWidth, cropHeight, 0, 0, width, height)
+    }
+
+    draw()
+    const observer = new ResizeObserver(draw)
+    observer.observe(canvas)
+    return () => observer.disconnect()
+  }, [frame, loaded])
+
+  return <canvas ref={canvasRef} className={styles.forecourtSequence} aria-hidden />
+}
 
 function CameraRig({ look }: { look: MutableRefObject<Look> }) {
   useFrame(({ camera }) => {
@@ -215,9 +292,11 @@ export function ImmersiveTheatre() {
   const [soundOn, setSoundOn] = useState(true)
   const [shopOpen, setShopOpen] = useState(false)
   const [hintVisible, setHintVisible] = useState(true)
+  const [forecourtFrame, setForecourtFrame] = useState(0)
+  const [forecourtHeld, setForecourtHeld] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
   const look = useRef<Look>({ yaw: 0, pitch: 0, fov: 72 })
-  const drag = useRef({ active: false, moved: false, x: 0, y: 0, yaw: 0, pitch: 0 })
+  const drag = useRef({ active: false, moved: false, x: 0, y: 0, yaw: 0, pitch: 0, frame: 0 })
   const wheelLock = useRef(false)
   const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { openCart, totalCount } = useCart()
@@ -271,7 +350,9 @@ export function ImmersiveTheatre() {
       y: event.clientY,
       yaw: look.current.yaw,
       pitch: look.current.pitch,
+      frame: forecourtFrame,
     }
+    if (room === 0) setForecourtHeld(true)
     setHintVisible(false)
   }
 
@@ -280,10 +361,15 @@ export function ImmersiveTheatre() {
     const dx = event.clientX - drag.current.x
     const dy = event.clientY - drag.current.y
     drag.current.moved ||= Math.abs(dx) + Math.abs(dy) > 5
-    look.current.yaw = drag.current.yaw - dx * 0.0047
-    look.current.pitch = THREE.MathUtils.clamp(drag.current.pitch - dy * 0.0037, -1.05, 1.05)
-    experienceRef.current?.style.setProperty("--pano-x", `${look.current.yaw * 28}vw`)
-    experienceRef.current?.style.setProperty("--pano-y", `${look.current.pitch * 9}vh`)
+    if (room === 0) {
+      const nextFrame = drag.current.frame - Math.round(dx / 7)
+      setForecourtFrame(((nextFrame % FORECOURT_FRAME_COUNT) + FORECOURT_FRAME_COUNT) % FORECOURT_FRAME_COUNT)
+    } else {
+      look.current.yaw = drag.current.yaw - dx * 0.0047
+      look.current.pitch = THREE.MathUtils.clamp(drag.current.pitch - dy * 0.0037, -1.05, 1.05)
+      experienceRef.current?.style.setProperty("--pano-x", `${look.current.yaw * 28}vw`)
+      experienceRef.current?.style.setProperty("--pano-y", `${look.current.pitch * 9}vh`)
+    }
   }
 
   const onPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -291,6 +377,7 @@ export function ImmersiveTheatre() {
     const dx = event.clientX - drag.current.x
     const dy = event.clientY - drag.current.y
     drag.current.active = false
+    setForecourtHeld(false)
     if (Math.abs(dy) > 85 && Math.abs(dy) > Math.abs(dx) * 1.25) {
       goToRoom(room + (dy < 0 ? 1 : -1))
     }
@@ -314,8 +401,20 @@ export function ImmersiveTheatre() {
       const image = new window.Image()
       image.src = item.texture
     })
+    FORECOURT_ATLASES.forEach((source) => {
+      const image = new window.Image()
+      image.src = source
+    })
     return () => { if (currentTimer) clearTimeout(currentTimer) }
   }, [])
+
+  useEffect(() => {
+    if (!entered || room !== 0 || forecourtHeld || shopOpen || transitioning) return
+    const timer = window.setInterval(() => {
+      setForecourtFrame((current) => (current + 1) % FORECOURT_FRAME_COUNT)
+    }, 105)
+    return () => window.clearInterval(timer)
+  }, [entered, forecourtHeld, room, shopOpen, transitioning])
 
   return (
     <main
@@ -337,11 +436,15 @@ export function ImmersiveTheatre() {
         }}
       />
 
-      <div
-        className={styles.panorama}
-        style={{ backgroundImage: `url(${ROOMS[room].texture})` }}
-        aria-hidden
-      />
+      {room === 0 ? (
+        <ForecourtSequence frame={forecourtFrame} />
+      ) : (
+        <div
+          className={styles.panorama}
+          style={{ backgroundImage: `url(${ROOMS[room].texture})` }}
+          aria-hidden
+        />
+      )}
 
       <Suspense fallback={<div className={styles.loading}><Logo /></div>}>
         <Canvas
