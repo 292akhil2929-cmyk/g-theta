@@ -1,5 +1,5 @@
-import { TeluguStorefront } from "@/components/telugu-storefront"
+import { TheatreExperience } from "@/components/theatre-experience"
 
 export default function Home() {
-  return <TeluguStorefront />
+  return <TheatreExperience />
 }
