@@ -51,7 +51,7 @@ const FORECOURT_CELL_HEIGHT = 360
 
 type Look = { yaw: number; pitch: number; fov: number }
 
-function ForecourtSequence({ frame }: { frame: number }) {
+function ForecourtSequence({ frame, verticalLook }: { frame: number; verticalLook: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const images = useRef<HTMLImageElement[]>([])
   const [loaded, setLoaded] = useState(0)
@@ -104,6 +104,21 @@ function ForecourtSequence({ frame }: { frame: number }) {
         cropX += (FORECOURT_CELL_WIDTH - cropWidth) / 2
       }
 
+      const baseCenterX = cropX + cropWidth / 2
+      const baseCenterY = cropY + cropHeight / 2
+      cropWidth *= 0.92
+      cropHeight *= 0.92
+      cropX = THREE.MathUtils.clamp(
+        baseCenterX - cropWidth / 2,
+        sourceX,
+        sourceX + FORECOURT_CELL_WIDTH - cropWidth,
+      )
+      cropY = THREE.MathUtils.clamp(
+        baseCenterY - cropHeight / 2 + verticalLook * (FORECOURT_CELL_HEIGHT - cropHeight) * 0.46,
+        sourceY,
+        sourceY + FORECOURT_CELL_HEIGHT - cropHeight,
+      )
+
       const context = canvas.getContext("2d", { alpha: false })
       if (!context) return
       context.drawImage(image, cropX, cropY, cropWidth, cropHeight, 0, 0, width, height)
@@ -113,7 +128,7 @@ function ForecourtSequence({ frame }: { frame: number }) {
     const observer = new ResizeObserver(draw)
     observer.observe(canvas)
     return () => observer.disconnect()
-  }, [frame, loaded])
+  }, [frame, loaded, verticalLook])
 
   return <canvas ref={canvasRef} className={styles.forecourtSequence} aria-hidden />
 }
@@ -293,11 +308,12 @@ export function ImmersiveTheatre() {
   const [shopOpen, setShopOpen] = useState(false)
   const [hintVisible, setHintVisible] = useState(true)
   const [forecourtFrame, setForecourtFrame] = useState(0)
-  const [forecourtHeld, setForecourtHeld] = useState(false)
+  const [forecourtVerticalLook, setForecourtVerticalLook] = useState(0)
   const audioRef = useRef<HTMLAudioElement>(null)
   const look = useRef<Look>({ yaw: 0, pitch: 0, fov: 72 })
-  const drag = useRef({ active: false, moved: false, x: 0, y: 0, yaw: 0, pitch: 0, frame: 0 })
+  const drag = useRef({ active: false, moved: false, x: 0, y: 0, yaw: 0, pitch: 0, frame: 0, verticalLook: 0 })
   const wheelLock = useRef(false)
+  const wheelDelta = useRef(0)
   const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { openCart, totalCount } = useCart()
 
@@ -333,10 +349,14 @@ export function ImmersiveTheatre() {
       look.current.fov = THREE.MathUtils.clamp(look.current.fov + event.deltaY * 0.03, 48, 90)
       return
     }
-    if (Math.abs(event.deltaY) < 18 || wheelLock.current) return
+    if (wheelLock.current) return
+    if (Math.sign(wheelDelta.current) !== Math.sign(event.deltaY)) wheelDelta.current = 0
+    wheelDelta.current += event.deltaY
+    if (Math.abs(wheelDelta.current) < 72) return
     wheelLock.current = true
-    goToRoom(room + (event.deltaY > 0 ? 1 : -1))
-    window.setTimeout(() => { wheelLock.current = false }, 900)
+    goToRoom(room + (wheelDelta.current > 0 ? 1 : -1))
+    wheelDelta.current = 0
+    window.setTimeout(() => { wheelLock.current = false }, 820)
   }
 
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -351,8 +371,8 @@ export function ImmersiveTheatre() {
       yaw: look.current.yaw,
       pitch: look.current.pitch,
       frame: forecourtFrame,
+      verticalLook: forecourtVerticalLook,
     }
-    if (room === 0) setForecourtHeld(true)
     setHintVisible(false)
   }
 
@@ -364,6 +384,7 @@ export function ImmersiveTheatre() {
     if (room === 0) {
       const nextFrame = drag.current.frame - Math.round(dx / 7)
       setForecourtFrame(((nextFrame % FORECOURT_FRAME_COUNT) + FORECOURT_FRAME_COUNT) % FORECOURT_FRAME_COUNT)
+      setForecourtVerticalLook(THREE.MathUtils.clamp(drag.current.verticalLook - dy / 180, -1, 1))
     } else {
       look.current.yaw = drag.current.yaw - dx * 0.0047
       look.current.pitch = THREE.MathUtils.clamp(drag.current.pitch - dy * 0.0037, -1.05, 1.05)
@@ -377,8 +398,7 @@ export function ImmersiveTheatre() {
     const dx = event.clientX - drag.current.x
     const dy = event.clientY - drag.current.y
     drag.current.active = false
-    setForecourtHeld(false)
-    if (Math.abs(dy) > 85 && Math.abs(dy) > Math.abs(dx) * 1.25) {
+    if (room !== 0 && Math.abs(dy) > 85 && Math.abs(dy) > Math.abs(dx) * 1.25) {
       goToRoom(room + (dy < 0 ? 1 : -1))
     }
   }
@@ -408,14 +428,6 @@ export function ImmersiveTheatre() {
     return () => { if (currentTimer) clearTimeout(currentTimer) }
   }, [])
 
-  useEffect(() => {
-    if (!entered || room !== 0 || forecourtHeld || shopOpen || transitioning) return
-    const timer = window.setInterval(() => {
-      setForecourtFrame((current) => (current + 1) % FORECOURT_FRAME_COUNT)
-    }, 105)
-    return () => window.clearInterval(timer)
-  }, [entered, forecourtHeld, room, shopOpen, transitioning])
-
   return (
     <main
       ref={experienceRef}
@@ -437,7 +449,7 @@ export function ImmersiveTheatre() {
       />
 
       {room === 0 ? (
-        <ForecourtSequence frame={forecourtFrame} />
+        <ForecourtSequence frame={forecourtFrame} verticalLook={forecourtVerticalLook} />
       ) : (
         <div
           className={styles.panorama}

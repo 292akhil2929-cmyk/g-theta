@@ -67,7 +67,7 @@
   opacity: 0;
   background: #050301;
   filter: blur(10px);
-  transition: opacity .38s cubic-bezier(.7, 0, .2, 1);
+  transition: opacity .46s cubic-bezier(.65, 0, .2, 1);
 }
 
 .roomFadeActive { opacity: 1; }
