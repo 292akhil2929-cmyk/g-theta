@@ -1,5 +1,5 @@
-import { TheatreExperience } from "@/components/theatre-experience"
+import { ImmersiveTheatre } from "@/components/immersive-theatre"
 
 export default function Home() {
-  return <TheatreExperience />
+  return <ImmersiveTheatre />
 }
