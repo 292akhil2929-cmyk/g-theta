@@ -238,20 +238,52 @@ function World({ room, look }: { room: number; look: MutableRefObject<Look> }) {
 
 function Entry({ onEnter }: { onEnter: () => void }) {
   return (
-    <motion.div className={styles.entry} exit={{ opacity: 0 }} transition={{ duration: 0.6 }}>
-      <div className={styles.entryBackdrop} />
+    <motion.div
+      className={styles.entry}
+      exit={{ opacity: 0, transition: { delay: 0.9, duration: 0.24 } }}
+    >
+      <motion.div
+        className={`${styles.gate} ${styles.gateLeft}`}
+        exit={{ x: "-104%", rotateY: 13 }}
+        transition={{ duration: 1.05, ease: [0.76, 0, 0.24, 1] }}
+      >
+        <span /><span /><span />
+      </motion.div>
+      <motion.div
+        className={`${styles.gate} ${styles.gateRight}`}
+        exit={{ x: "104%", rotateY: -13 }}
+        transition={{ duration: 1.05, ease: [0.76, 0, 0.24, 1] }}
+      >
+        <span /><span /><span />
+      </motion.div>
+      <motion.div
+        className={styles.entryMarquee}
+        initial={{ y: -30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -70, opacity: 0 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <strong>G THETA</strong><b>70mm</b>
+      </motion.div>
       <motion.div
         className={styles.entryMark}
         initial={{ opacity: 0, scale: 0.82 }}
         animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 1.35, rotate: 9 }}
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
       >
         <Logo />
       </motion.div>
-      <button className={styles.enter} onClick={onEnter} aria-label="Enter the theatre">
-        <span />
-        <ChevronDown size={26} strokeWidth={2.4} />
-      </button>
+      <motion.button
+        className={styles.enter}
+        onClick={onEnter}
+        aria-label="Enter the theatre"
+        exit={{ opacity: 0, y: 24 }}
+      >
+        <strong>ENTER THEATRE</strong>
+        <ChevronDown size={22} strokeWidth={2.4} />
+      </motion.button>
+      <div className={styles.gateFloor} aria-hidden />
     </motion.div>
   )
 }
@@ -452,7 +484,7 @@ export function ImmersiveTheatre() {
         <ForecourtSequence frame={forecourtFrame} verticalLook={forecourtVerticalLook} />
       ) : (
         <div
-          className={styles.panorama}
+          className={`${styles.panorama} ${room === 1 ? styles.lobbyPanorama : ""}`}
           style={{ backgroundImage: `url(${ROOMS[room].texture})` }}
           aria-hidden
         />
@@ -516,7 +548,16 @@ export function ImmersiveTheatre() {
 
           {room === 1 && (
             <button className={styles.merchPortal} onClick={() => setShopOpen(true)} aria-label="Enter merchandise room">
-              <span><ShoppingBag /></span>
+              <span className={styles.merchPortalIcon}><ShoppingBag /></span>
+              <span className={styles.merchDisplay} aria-hidden>
+                {products.slice(0, 3).map((product) => (
+                  <span key={product.id} className={styles.merchDisplayItem}>
+                    {product.images?.[0] && (
+                      <Image src={product.images[0]} alt="" fill sizes="150px" />
+                    )}
+                  </span>
+                ))}
+              </span>
             </button>
           )}
         </>

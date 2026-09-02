@@ -13,7 +13,7 @@
 
 .experience:active { cursor: grabbing; }
 .forecourtSequence {
-  position: absolute;
+  position: fixed;
   z-index: 0;
   inset: 0;
   width: 100%;
@@ -23,7 +23,7 @@
 }
 
 .panorama {
-  position: absolute;
+  position: fixed;
   z-index: 0;
   inset: -6%;
   background-position: calc(50% + var(--pano-x)) calc(50% + var(--pano-y));
@@ -35,7 +35,9 @@
   will-change: background-position;
 }
 
-.canvas { position: absolute !important; z-index: 2; inset: 0; }
+.lobbyPanorama { transform: scale(1.03) scaleX(-1); }
+
+.canvas { position: fixed !important; z-index: 2; inset: 0; }
 
 .loading {
   position: absolute;
@@ -65,12 +67,14 @@
   inset: -5%;
   pointer-events: none;
   opacity: 0;
-  background: #050301;
-  filter: blur(10px);
-  transition: opacity .46s cubic-bezier(.65, 0, .2, 1);
+  background:
+    radial-gradient(ellipse at 50% 54%, rgba(246, 212, 67, .98) 0 7%, rgba(223, 56, 44, .98) 8% 31%, #050301 63%);
+  filter: blur(7px);
+  transform: scale(1.24);
+  transition: opacity .46s cubic-bezier(.65, 0, .2, 1), transform .78s cubic-bezier(.65, 0, .2, 1);
 }
 
-.roomFadeActive { opacity: 1; }
+.roomFadeActive { opacity: 1; transform: scale(.92); }
 
 .projectorFlicker {
   position: absolute;
@@ -86,61 +90,109 @@
   position: absolute;
   z-index: 60;
   inset: 0;
-  display: grid;
-  place-items: center;
   overflow: hidden;
-  background: #df3028;
+  perspective: 1400px;
+  background: transparent;
 }
 
-.entryBackdrop {
+.gate {
   position: absolute;
-  inset: -20%;
-  opacity: .55;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  width: calc(50% + 1px);
+  overflow: hidden;
+  background-color: #cf2f27;
   background:
-    repeating-radial-gradient(circle at 50% 110%, transparent 0 35px, rgba(255, 218, 57, .13) 36px 38px),
-    linear-gradient(135deg, transparent 49.5%, rgba(255, 218, 57, .08) 50%, transparent 50.5%);
-  animation: entrySpin 34s linear infinite;
+    linear-gradient(90deg, rgba(0,0,0,.22), transparent 8% 91%, rgba(0,0,0,.28)),
+    repeating-linear-gradient(0deg, transparent 0 16vh, rgba(246, 212, 67, .25) 16vh calc(16vh + 2px)),
+    #cf2f27;
+  box-shadow: inset 0 0 80px rgba(57, 5, 2, .42);
+  transform-style: preserve-3d;
 }
+
+.gateLeft { left: 0; border-right: 2px solid #f6d443; transform-origin: left center; }
+.gateRight { right: 0; border-left: 2px solid #f6d443; transform-origin: right center; }
+.gate > span { position: absolute; top: 13%; bottom: 10%; width: 4px; background: rgba(15, 8, 5, .58); box-shadow: 2px 0 0 rgba(246, 212, 67, .28); }
+.gate > span:nth-child(1) { left: 12%; }
+.gate > span:nth-child(2) { left: 50%; }
+.gate > span:nth-child(3) { right: 12%; }
+
+.entryMarquee {
+  position: absolute;
+  z-index: 4;
+  top: clamp(1rem, 4vh, 2.5rem);
+  left: 50%;
+  display: flex;
+  align-items: baseline;
+  gap: .7rem;
+  padding: .7rem 1.2rem .55rem;
+  border: 2px solid #0e0a07;
+  color: #f6d443;
+  background: #0e0a07;
+  box-shadow: 0 0 0 3px #f6d443, 0 18px 48px rgba(58, 6, 2, .28);
+  translate: -50% 0;
+  white-space: nowrap;
+}
+
+.entryMarquee strong { font-family: var(--font-display-face), sans-serif; font-size: clamp(1.05rem, 2.1vw, 1.75rem); letter-spacing: .04em; }
+.entryMarquee b { color: #f8f0df; font-size: clamp(.65rem, 1vw, .85rem); letter-spacing: .08em; }
 
 .entryMark {
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  z-index: 5;
+  top: 50%;
+  left: 50%;
   display: grid;
   place-items: center;
-  width: min(46vw, 380px);
+  width: min(33vw, 285px);
   aspect-ratio: 1;
   border-radius: 50%;
   background: #f4c638;
-  box-shadow: 0 0 0 20px #0e0a07, 0 0 0 25px #f4c638, 25px 34px 0 rgba(25, 10, 6, .22);
-  transform: rotate(-3deg);
+  box-shadow: 0 0 0 12px #0e0a07, 0 0 0 16px #f4c638, 0 30px 70px rgba(25, 10, 6, .42);
+  translate: -50% -56%;
+  rotate: -3deg;
 }
 
 .entryMark svg { width: 66%; height: auto; color: #0e0a07; }
 
 .enter {
   position: absolute;
-  z-index: 4;
-  bottom: clamp(2rem, 6vh, 5rem);
+  z-index: 6;
+  bottom: clamp(2rem, 7vh, 4.5rem);
   left: 50%;
-  display: grid;
-  place-items: center;
-  width: 62px;
-  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .7rem;
+  min-width: 186px;
+  min-height: 56px;
+  padding: .8rem 1.1rem;
   border: 2px solid #0e0a07;
-  border-radius: 50%;
+  border-radius: 999px;
   background: #f4c638;
   color: #0e0a07;
-  box-shadow: 6px 7px 0 #0e0a07;
-  transform: translateX(-50%);
-  transition: transform .25s ease, box-shadow .25s ease;
+  box-shadow: 0 12px 32px rgba(48, 6, 3, .34);
+  transform: translateX(-50%) translateY(0);
+  transition: transform .25s ease, background .25s ease;
 }
 
-.enter::before,
-.enter::after,
-.enter span { position: absolute; inset: -12px; border: 1px solid rgba(255, 230, 99, .48); border-radius: 50%; content: ""; animation: enterPulse 1.9s ease-out infinite; }
-.enter::after { animation-delay: .55s; }
-.enter span { animation-delay: 1.1s; }
-.enter:hover { transform: translate(-50%, -5px); box-shadow: 9px 12px 0 #0e0a07; }
+.enter strong { font-family: var(--font-display-face), sans-serif; font-size: .86rem; letter-spacing: .055em; white-space: nowrap; }
+.enter svg { animation: enterNudge 1.4s cubic-bezier(.37, 0, .63, 1) infinite; }
+.enter:hover { background: #fff1b0; transform: translate(-50%, -4px); }
+.enter:active { transform: translate(-50%, 1px) scale(.98); }
+
+.gateFloor {
+  position: absolute;
+  z-index: 3;
+  right: -8%;
+  bottom: -8%;
+  left: -8%;
+  height: 15%;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(6, 3, 2, .52));
+  transform: perspective(340px) rotateX(58deg);
+}
 
 .hud {
   position: absolute;
@@ -199,8 +251,8 @@
 }
 
 .roomNav button { display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 50%; background: transparent; }
-.roomNav span { display: block; width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.46); transition: width .35s ease, border-radius .35s ease, background .35s ease; }
-.roomNav .roomActive span { width: 28px; border-radius: 999px; background: var(--room-tone); }
+.roomNav span { display: block; width: 28px; height: 7px; border-radius: 999px; background: rgba(255,255,255,.46); transform: scaleX(.25); transition: transform .35s ease, background .35s ease; }
+.roomNav .roomActive span { background: var(--room-tone); transform: scaleX(1); }
 
 .step { position: absolute; z-index: 13; top: 50%; transform: translateY(-50%); }
 .step:hover:not(:disabled) { transform: translateY(-50%) scale(1.08); }
@@ -231,25 +283,34 @@
 .merchPortal {
   position: absolute;
   z-index: 12;
-  top: 35%;
-  right: 18%;
-  display: grid;
-  place-items: center;
-  width: 64px;
-  height: 64px;
+  top: 20%;
+  right: clamp(2.5rem, 7vw, 8rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .7rem;
+  width: clamp(180px, 21vw, 275px);
+  padding: 0;
   border: 0;
-  border-radius: 50%;
   color: #0e0a07;
-  background: #f4c638;
-  box-shadow: 0 0 0 0 rgba(244, 198, 56, .5);
-  animation: portalPulse 1.8s infinite;
+  background: transparent;
+  filter: drop-shadow(0 22px 28px rgba(0, 0, 0, .4));
+  transform: perspective(700px) rotateY(-7deg);
+  transform-origin: right center;
+  transition: transform .35s cubic-bezier(.2, .8, .2, 1), filter .35s ease;
 }
 
-.merchPortal span { display: grid; place-items: center; width: 46px; height: 46px; border: 2px solid #0e0a07; border-radius: 50%; }
-.merchPortal svg { width: 20px; }
+.merchPortal:hover { filter: drop-shadow(0 28px 36px rgba(0, 0, 0, .52)); transform: perspective(700px) rotateY(0deg) translateY(-5px); }
+.merchPortal:active { transform: perspective(700px) rotateY(0deg) translateY(1px) scale(.985); }
+.merchPortalIcon { display: grid; place-items: center; width: 58px; height: 58px; border: 2px solid #0e0a07; border-radius: 50%; background: #f4c638; box-shadow: 0 0 0 0 rgba(244, 198, 56, .48); animation: portalPulse 1.8s infinite; }
+.merchPortalIcon svg { width: 21px; }
+.merchDisplay { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; width: 100%; padding: 8px; border: 2px solid #f4c638; border-radius: 14px; background: rgba(9, 6, 4, .82); box-shadow: inset 0 0 30px rgba(244, 198, 56, .13); backdrop-filter: blur(7px); }
+.merchDisplayItem { position: relative; overflow: hidden; aspect-ratio: .72; border-radius: 9px; background: #17110d; }
+.merchDisplayItem img { object-fit: cover; transition: transform .45s ease; }
+.merchPortal:hover .merchDisplayItem img { transform: scale(1.05); }
 
 .shop {
-  position: absolute;
+  position: fixed;
   z-index: 80;
   top: 0;
   right: 0;
@@ -279,13 +340,14 @@
 
 @keyframes flicker { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 @keyframes loadingPulse { 50% { transform: scale(.92); opacity: .55; } }
-@keyframes entrySpin { to { transform: rotate(360deg); } }
-@keyframes enterPulse { to { opacity: 0; transform: scale(1.55); } }
+@keyframes enterNudge { 0%, 100% { transform: translateY(-2px); } 50% { transform: translateY(3px); } }
 @keyframes dragHint { 0%,100% { transform: translateX(-5px) rotate(-9deg); } 50% { transform: translateX(5px) rotate(9deg); } }
 @keyframes portalPulse { 70% { box-shadow: 0 0 0 22px rgba(244, 198, 56, 0); } 100% { box-shadow: 0 0 0 0 rgba(244, 198, 56, 0); } }
 
 @media (max-width: 700px) {
-  .entryMark { width: min(66vw, 310px); box-shadow: 0 0 0 14px #0e0a07, 0 0 0 18px #f4c638, 16px 22px 0 rgba(25, 10, 6, .22); }
+  .entryMark { width: min(56vw, 240px); box-shadow: 0 0 0 9px #0e0a07, 0 0 0 13px #f4c638, 0 22px 46px rgba(25, 10, 6, .36); }
+  .entryMarquee { top: 1.2rem; }
+  .enter { bottom: 2.2rem; min-width: 208px; min-height: 53px; }
   .hud { padding: .65rem; }
   .mark { width: 58px; }
   .actions button { width: 41px; height: 41px; }
@@ -296,17 +358,17 @@
   .stepNext { right: 1rem; }
   .roomNav { bottom: 1rem; }
   .hint { bottom: 4.8rem; }
-  .merchPortal { top: 32%; right: 9%; width: 56px; height: 56px; }
-  .merchPortal span { width: 41px; height: 41px; }
+  .merchPortal { top: 31%; right: 8%; width: 54px; filter: none; transform: none; }
+  .merchPortal:hover,
+  .merchPortal:active { filter: none; transform: none; }
+  .merchPortalIcon { width: 54px; height: 54px; }
+  .merchDisplay { display: none; }
   .products { grid-template-columns: 1fr; }
   .shop { padding: .8rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .entryBackdrop,
-  .enter::before,
-  .enter::after,
-  .enter span,
+  .enter svg,
   .hint svg,
   .merchPortal,
   .projectorFlicker,
