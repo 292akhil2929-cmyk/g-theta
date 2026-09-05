@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { AnimatePresence, motion } from "motion/react"
 import { Minus, Plus, X, Truck } from "lucide-react"
 import { FREE_SHIPPING_AT, useCart } from "@/components/cart-context"
@@ -82,11 +83,21 @@ export function CartDrawer() {
                         className="glass flex items-center gap-3 rounded-2xl p-3"
                       >
                         <div
-                          className="h-16 w-14 shrink-0 rounded-xl border border-white/10"
+                          className="relative h-16 w-14 shrink-0 overflow-hidden rounded-xl border border-white/10"
                           style={{
                             background: `linear-gradient(150deg, ${line.product.colorFrom}, ${line.product.colorTo})`,
                           }}
-                        />
+                        >
+                          {line.product.images?.[0] && (
+                            <Image
+                              src={line.product.images[0]}
+                              alt={line.product.name}
+                              fill
+                              sizes="56px"
+                              className="object-cover"
+                            />
+                          )}
+                        </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold">{line.product.name}</p>
                           <p className="text-xs text-muted-foreground">
@@ -135,7 +146,7 @@ export function CartDrawer() {
               <button
                 onClick={checkout}
                 disabled={lines.length === 0}
-                className="w-full rounded-full bg-gradient-to-r from-electric to-neon py-3.5 text-center font-semibold text-white transition hover:shadow-[0_0_40px_rgba(79,124,255,0.45)] disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full rounded-full bg-gradient-to-r from-electric to-neon py-3.5 text-center font-semibold text-black transition hover:shadow-[0_0_40px_rgba(245,203,69,0.35)] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Checkout
               </button>

@@ -18,7 +18,7 @@ export function MemeToaster() {
             transition={{ type: "spring", stiffness: 380, damping: 24 }}
             className={`glass rounded-full px-5 py-2.5 text-sm font-medium shadow-lg ${
               toast.kind === "add"
-                ? "border-electric/40 text-foreground shadow-[0_0_30px_rgba(79,124,255,0.25)]"
+                ? "border-electric/40 text-foreground shadow-[0_0_30px_rgba(216,58,46,0.25)]"
                 : "border-red-400/40 text-red-200 shadow-[0_0_30px_rgba(232,70,47,0.2)]"
             }`}
           >
