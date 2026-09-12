@@ -16,7 +16,7 @@ export type MemeToast = {
   kind: "add" | "remove"
 }
 
-export const FREE_SHIPPING_AT = 7999
+export const FREE_SHIPPING_AT = 2999
 
 type CartContextValue = {
   lines: CartLine[]

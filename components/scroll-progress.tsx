@@ -12,8 +12,8 @@ export function ScrollProgress() {
       className="fixed inset-x-0 top-0 z-[85] h-[3px] origin-left rounded-r-full"
       style={{
         scaleX,
-        background: "linear-gradient(90deg, #4f7cff, #a855f7, #d7d9e0)",
-        boxShadow: "0 0 12px rgba(79,124,255,0.6), 0 0 28px rgba(168,85,247,0.35)",
+        background: "linear-gradient(90deg, #d83a2e, #f5cb45)",
+        boxShadow: "0 0 12px rgba(216,58,46,0.6), 0 0 28px rgba(245,203,69,0.3)",
       }}
     />
   )
