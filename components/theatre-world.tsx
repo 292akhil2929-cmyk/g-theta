@@ -101,6 +101,9 @@ export function TheatreWorld({ control, onReady, onError, points }: {
     box(wardrobe, [3.35, .065, .18], [0, 1.64, 0], "#e7bb58")
     box(wardrobe, [.055, 2.8, .18], [-1.65, .25, 0], "#b08a47")
     box(wardrobe, [.055, 2.8, .18], [1.65, .25, 0], "#b08a47")
+    box(wardrobe, [.12, 2.8, .55], [-1.59, .25, -.3], "#3a291a")
+    box(wardrobe, [.12, 2.8, .55], [1.59, .25, -.3], "#3a291a")
+    box(wardrobe, [3.3, .09, .7], [0, -1.16, -.13], "#513c24")
     for (const x of [-1.55, 1.55]) {
       box(wardrobe, [.065, 2.4, .09], [x, -2.3, -.05], "#4c3924")
       box(wardrobe, [.5, .06, .55], [x, -3.47, .05], "#332719")
