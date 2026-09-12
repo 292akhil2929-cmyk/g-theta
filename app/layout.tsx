@@ -2,12 +2,9 @@ import type { Metadata } from "next"
 import { Archivo_Black, Space_Grotesk } from "next/font/google"
 import "./globals.css"
 import { CartProvider } from "@/components/cart-context"
-import { ClickSpark } from "@/components/fx/click-spark"
 import { CartDrawer } from "@/components/cart-drawer"
 import { CheckoutOverlay } from "@/components/checkout-overlay"
 import { MemeToaster } from "@/components/meme-toaster"
-import { ScrollProgress } from "@/components/scroll-progress"
-import { SmoothScroll } from "@/components/smooth-scroll"
 
 const display = Archivo_Black({ subsets: ["latin"], variable: "--font-display-face", weight: "400" })
 const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-grotesk" })
@@ -28,24 +25,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${display.variable} ${grotesk.variable}`}>
       <body>
-        <div className="grain" />
         <CartProvider>
-          <SmoothScroll>
-            <ScrollProgress />
             {children}
             <CartDrawer />
             <MemeToaster />
             <CheckoutOverlay />
-            <ClickSpark
-              sparkColor="#f5cb45"
-              sparkSize={18}
-              sparkRadius={18}
-              sparkCount={8}
-              duration={420}
-              easing="ease-out"
-              extraScale={1}
-            />
-          </SmoothScroll>
         </CartProvider>
       </body>
     </html>
